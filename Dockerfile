@@ -14,8 +14,6 @@ RUN python -m playwright install firefox
 COPY src/ src/
 COPY run.py .
 
-# Seed files — copied to /data volume at runtime by run.py
-COPY session.json /app/session.json
-COPY service_account.json /app/service_account.json
+# session.json and service_account.json are seeded from env vars at runtime
 
 CMD ["python", "run.py"]
