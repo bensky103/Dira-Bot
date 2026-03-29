@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python:*)",
+      "Bash(py --list)",
+      "Bash(echo $PATH)",
+      "Bash(python -c \"from playwright.sync_api import sync_playwright; print\\(''playwright OK''\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''Service account email:'''', d.get\\(''''client_email'''',''''NOT FOUND''''\\)\\)\")",
+      "Bash(python -m playwright install --dry-run chromium)",
+      "Bash(python -c \"from playwright.sync_api import sync_playwright; p=sync_playwright\\(\\).start\\(\\); b=p.chromium.launch\\(headless=True\\); b.close\\(\\); p.stop\\(\\); print\\(''Chromium browser OK''\\)\")",
+      "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
+      "Bash(where chrome.exe)",
+      "Bash(reg query:*)",
+      "Read(//c/Users/Guy Bensky/AppData/Local/Google/Chrome/Application/**)",
+      "Bash(pip list:*)",
+      "Bash(python -c \"import win32crypt; print\\(''pywin32 OK''\\)\")",
+      "Bash(python export_cookies.py)",
+      "Bash(python -m playwright install firefox)",
+      "Bash(python debug_page.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python debug_page.py)"
+    ]
+  }
+}

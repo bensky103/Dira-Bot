@@ -1,0 +1,9 @@
+.env
+service_account.json
+storage_state.json
+fb_cookies.json
+seen_urls.json
+chrome_profile/
+__pycache__/
+*.pyc
+logs/
