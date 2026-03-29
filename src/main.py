@@ -10,7 +10,7 @@ from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_
 from src.scraper import Scraper
 from src.parser import parse_post
 from src.sheets import SheetClient
-from src.notifier import send_catch_alert
+from src.notifier import send_catch_alert, send_session_expired_alert
 
 # ── Logging setup ──
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -92,11 +92,21 @@ def _save_seen(seen: set[str]):
 _seen_urls = _load_seen()
 
 
+_session_alert_sent = False
+
+
 def run_cycle(scraper: Scraper, sheet: SheetClient):
     """Run one full scrape-parse-store cycle across all groups."""
+    global _session_alert_sent
+    empty_groups = 0
+
     for i, group_url in enumerate(GROUPS):
         logger.info("Scraping group %d/%d: %s", i + 1, len(GROUPS), group_url)
         posts = scraper.scrape_group(group_url)
+
+        if len(posts) == 0:
+            empty_groups += 1
+
         new_posts = [p for p in posts if p["url"] not in _seen_urls and not sheet.link_exists(p["url"])]
         logger.info("Got %d posts (%d new) from %s", len(posts), len(new_posts), group_url)
 
@@ -136,6 +146,14 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
             )
             logger.info("Waiting %d seconds before next group...", wait)
             time.sleep(wait)
+
+    # Session expiry detection: if ALL groups returned 0 posts, session is likely dead
+    if empty_groups >= len(GROUPS) and not _session_alert_sent:
+        logger.warning("All %d groups returned 0 posts — session may have expired!", len(GROUPS))
+        asyncio.run(send_session_expired_alert())
+        _session_alert_sent = True
+    elif empty_groups < len(GROUPS):
+        _session_alert_sent = False  # Reset if some groups work again
 
 
 def main():

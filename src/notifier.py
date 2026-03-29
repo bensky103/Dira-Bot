@@ -20,6 +20,24 @@ async def send_catch_alert(parsed: dict, link: str):
         f"📞 *טלפון:* {parsed.get('phone', 'לא צוין')}\n\n"
         f"🔗 [לפוסט המלא]({link})"
     )
+    await _send_to_all(msg)
+
+
+async def send_session_expired_alert():
+    """Alert the user that the Facebook session has expired."""
+    msg = (
+        "⚠️ *Dira-Bot: Session Expired*\n\n"
+        "Facebook session is no longer valid.\n"
+        "The bot cannot scrape private groups.\n\n"
+        "To fix:\n"
+        "1. Run `python run.py` locally\n"
+        "2. Log in when Firefox opens\n"
+        "3. Upload the new `session.json` to the server"
+    )
+    await _send_to_all(msg)
+
+
+async def _send_to_all(msg: str):
     for chat_id in TELEGRAM_CHAT_IDS:
         try:
             await bot.send_message(
@@ -27,6 +45,6 @@ async def send_catch_alert(parsed: dict, link: str):
                 text=msg,
                 parse_mode="Markdown",
             )
-            logger.info("Telegram alert sent to %s for %s", chat_id, link)
+            logger.info("Telegram sent to %s", chat_id)
         except Exception as e:
             logger.error("Telegram send to %s failed: %s", chat_id, e)

@@ -14,7 +14,4 @@ RUN python -m playwright install firefox
 COPY src/ src/
 COPY run.py .
 
-# Volume mount point for persistent data (session, seen_urls, logs)
-VOLUME /data
-
 CMD ["python", "run.py"]
