@@ -30,6 +30,13 @@ class Scraper:
                 viewport={"width": 1280, "height": 900},
                 locale="he-IL",
             )
+        elif os.environ.get("RAILWAY_ENVIRONMENT"):
+            # On Railway with no session — can't open a browser for login
+            raise RuntimeError(
+                "No session.json found on Railway. "
+                "Run the bot locally first to generate session.json, "
+                "then upload it to the /data volume."
+            )
         else:
             logger.info("No session found — opening Firefox for manual login...")
             self._browser = self._playwright.firefox.launch(headless=False)

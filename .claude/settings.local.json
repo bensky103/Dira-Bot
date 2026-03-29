@@ -17,7 +17,11 @@
       "Bash(python export_cookies.py)",
       "Bash(python -m playwright install firefox)",
       "Bash(python debug_page.py)",
-      "Bash(PYTHONIOENCODING=utf-8 python debug_page.py)"
+      "Bash(PYTHONIOENCODING=utf-8 python debug_page.py)",
+      "Bash(railway --version)",
+      "Bash(railway volume:*)",
+      "Bash(railway shell:*)",
+      "Bash(railway run:*)"
     ]
   }
 }
