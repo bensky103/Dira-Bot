@@ -32,7 +32,8 @@ async def send_session_expired_alert():
         "To fix:\n"
         "1. Run `python run.py` locally\n"
         "2. Log in when Firefox opens\n"
-        "3. Upload the new `session.json` to the server"
+        "3. Update the `SESSION_JSON` env var on Railway\n"
+        "4. Delete `/data/session.json` from the volume and redeploy"
     )
     await _send_to_all(msg)
 

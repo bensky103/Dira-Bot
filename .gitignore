@@ -1,4 +1,5 @@
 .env
+session.json
 service_account.json
 storage_state.json
 fb_cookies.json

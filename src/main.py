@@ -6,7 +6,7 @@ import random
 import time
 from logging.handlers import RotatingFileHandler
 
-from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, FILTERS
+from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, FILTERS, DATA_DIR
 from src.scraper import Scraper
 from src.parser import parse_post
 from src.sheets import SheetClient
@@ -70,8 +70,6 @@ def check_filters(parsed: dict) -> str | None:
 
     return None
 
-
-from src.config import DATA_DIR
 
 # Persist seen URLs to disk so restarts don't re-process old posts
 SEEN_FILE = os.path.join(DATA_DIR, "seen_urls.json")

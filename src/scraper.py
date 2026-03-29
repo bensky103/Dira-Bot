@@ -101,6 +101,14 @@ class Scraper:
                 page.evaluate("window.scrollBy(0, window.innerHeight)")
                 page.wait_for_timeout(random.randint(2000, 4000))
 
+            # Check if we're actually logged in / seeing content
+            page_title = page.title()
+            has_feed = page.query_selector('[role="feed"]') is not None
+            logger.info("Page title: %s | Feed found: %s", page_title, has_feed)
+            if not has_feed:
+                page_text = page.evaluate("() => document.body.innerText.substring(0, 500)")
+                logger.warning("No feed on page. Page text preview: %s", page_text)
+
             # Click all "See more" to expand truncated posts
             see_more = page.query_selector_all(
                 'div[role="button"]:has-text("See more"), '
@@ -212,8 +220,8 @@ class Scraper:
 
             logger.info("Extracted %d posts from %s", len(posts), group_url)
 
-            # Debug screenshot
-            debug_dir = os.path.join(PROJECT_DIR, "logs")
+            # Debug screenshot — save to volume on Railway for persistence
+            debug_dir = "/data/logs" if os.path.isdir("/data") else os.path.join(PROJECT_DIR, "logs")
             os.makedirs(debug_dir, exist_ok=True)
             group_id = group_url.rstrip("/").split("/")[-1]
             page.screenshot(
