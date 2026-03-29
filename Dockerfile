@@ -14,9 +14,8 @@ RUN python -m playwright install firefox
 COPY src/ src/
 COPY run.py .
 
-# Copy seed files for first deploy — Railway volume at /data
-# will persist these. After first deploy, these lines can be removed.
-COPY session.json /data/session.json
-COPY service_account.json /data/service_account.json
+# Seed files — copied to /data volume at runtime by run.py
+COPY session.json /app/session.json
+COPY service_account.json /app/service_account.json
 
 CMD ["python", "run.py"]
