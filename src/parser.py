@@ -2,61 +2,37 @@ import json
 import logging
 from openai import OpenAI
 
-from src.config import OPENAI_API_KEY, FILTERS
+from src.config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+SYSTEM_PROMPT = """You are a real estate listing parser for the Israeli rental market.
 
-def _build_system_prompt() -> str:
-    """Build the system prompt dynamically from FILTERS config."""
-    cities = FILTERS.get("cities")
-    cities_str = ", ".join(cities) if cities else "any city"
+Your job: extract structured data from Facebook posts about apartments for rent.
 
-    parts = []
-    if FILTERS.get("min_rooms"):
-        parts.append(f"at least {FILTERS['min_rooms']} rooms")
-    if FILTERS.get("max_rooms"):
-        parts.append(f"at most {FILTERS['max_rooms']} rooms")
-    if FILTERS.get("min_sqm"):
-        parts.append(f"at least {FILTERS['min_sqm']} sqm")
-    if FILTERS.get("max_sqm"):
-        parts.append(f"at most {FILTERS['max_sqm']} sqm")
-    if FILTERS.get("max_price"):
-        parts.append(f"max price {FILTERS['max_price']:,} NIS")
-    if FILTERS.get("min_price"):
-        parts.append(f"min price {FILTERS['min_price']:,} NIS")
+IMPORTANT: You must extract data from ANY post that is offering an apartment/room/property for rent.
+Do NOT skip a post just because the price is high, the location is unclear, or it mentions a broker.
+The ONLY reason to skip is if the post is genuinely NOT a rental listing (e.g. someone looking for an apartment, a question, a joke, a comment, group rules, spam, or unrelated content).
 
-    criteria = "; ".join(parts) if parts else "no specific criteria"
+When in doubt, extract the data — do not skip.
 
-    return f"""You are a real estate listing parser for the Israeli rental market.
+Extract these fields:
+- city: the city name in Hebrew (e.g. "תל אביב", "רמת גן"). If it says "צפון הישן" or similar neighborhood names, determine which city it's in.
+- street: street name in Hebrew, or null if not mentioned
+- price_nis: monthly rent as integer. Parse "10,000 ₪" as 10000. Null if not mentioned.
+- rooms: number of rooms as float (e.g. 2.5 for "שתיים וחצי"). "חד" = "חדרים". Null if not mentioned.
+- sqm: size in square meters as integer. "מ״ר" or "מטר" = sqm. Null if not mentioned.
+- phone: phone number in any format, null if not mentioned
+- is_catch: true ONLY if the price seems significantly below market rate for the area and apartment size
 
-Your job: extract structured data from Hebrew Facebook posts about apartments for rent.
-
-Target criteria: {cities_str} | {criteria}
-
-For each post, determine:
-1. Is this a rental listing? (not a "looking for" post, not a question, not spam, not a comment)
-2. If yes, extract: city, street, price_nis (monthly rent as integer), rooms (float, e.g. 2.5), sqm (integer), phone
-3. Set is_catch = true if the price is significantly below market rate for the area and size
-
-Return strictly as JSON with these fields: city, street, price_nis, rooms, sqm, phone, is_catch
-If the post is NOT a rental listing, return {{"skip": true}}
-
-Important:
-- Posts in Hebrew. City/street names should be in Hebrew as they appear.
-- "חדרים" = rooms, "מ״ר" or "מטר" = sqm, "₪" or "ש״ח" = NIS
-- If a field is not mentioned, use null
-- Phone can be in any format"""
-
-
-SYSTEM_PROMPT = _build_system_prompt()
+Return strictly as JSON.
+If the post is NOT a rental offering, return {"skip": true}"""
 
 
 def parse_post(text: str) -> dict | None:
     """Send post text to OpenAI gpt-4o-mini and return parsed JSON or None."""
-    # Truncate to save tokens
     post_text = text[:3000]
 
     logger.info("--- Parsing post ---")

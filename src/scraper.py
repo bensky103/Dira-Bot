@@ -168,13 +168,13 @@ class Scraper:
 
                     // Find post URL — check multiple FB URL patterns
                     let postUrl = '';
-                    const groupPostRe = new RegExp('groups/[^/]+/[0-9]+');
                     const links = child.querySelectorAll('a[href]');
                     for (const link of links) {
                         const href = link.getAttribute('href') || '';
                         if (href.includes('/posts/') ||
                             href.includes('/permalink/') ||
-                            groupPostRe.test(href) ||
+                            href.includes('/commerce/listing/') ||
+                            href.includes('/marketplace/item/') ||
                             href.includes('/p/')) {
                             postUrl = href.startsWith('/')
                                 ? 'https://www.facebook.com' + href.split('?')[0]
@@ -182,15 +182,19 @@ class Scraper:
                             break;
                         }
                     }
-                    // Fallback: look for timestamp links (usually the post permalink)
+                    // Fallback: look for any link with a numeric post/listing ID
                     if (!postUrl) {
-                        const tsRe1 = new RegExp('groups/[0-9]+/[0-9]+');
-                        const tsRe2 = new RegExp('groups/[^/]+/posts');
-                        const timeLinks = child.querySelectorAll('a[href*="facebook.com"]');
-                        for (const link of timeLinks) {
+                        const idPatterns = [
+                            new RegExp('groups/[0-9]+/[0-9]+'),
+                            new RegExp('groups/[^/]+/posts'),
+                            new RegExp('listing/[0-9]+'),
+                        ];
+                        for (const link of links) {
                             const href = link.getAttribute('href') || '';
-                            if (tsRe1.test(href) || tsRe2.test(href)) {
-                                postUrl = href.split('?')[0];
+                            if (idPatterns.some(re => re.test(href))) {
+                                postUrl = href.startsWith('/')
+                                    ? 'https://www.facebook.com' + href.split('?')[0]
+                                    : href.split('?')[0];
                                 break;
                             }
                         }

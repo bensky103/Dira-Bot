@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import os
@@ -10,7 +9,7 @@ from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_
 from src.scraper import Scraper
 from src.parser import parse_post
 from src.sheets import SheetClient
-from src.notifier import send_catch_alert, send_session_expired_alert
+from src.notifier import send_catch_alert, send_session_expired_alert, send_batch_alert
 
 # ── Logging setup ──
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -91,11 +90,13 @@ _seen_urls = _load_seen()
 
 
 _session_alert_sent = False
+_batch_counter = 0  # Tracks listings added since last batch alert
+BATCH_ALERT_THRESHOLD = 5
 
 
 def run_cycle(scraper: Scraper, sheet: SheetClient):
     """Run one full scrape-parse-store cycle across all groups."""
-    global _session_alert_sent
+    global _session_alert_sent, _batch_counter
 
     for i, group_url in enumerate(GROUPS):
         logger.info("Scraping group %d/%d: %s", i + 1, len(GROUPS), group_url)
@@ -105,7 +106,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
         if i == 0 and len(posts) == 0:
             if not _session_alert_sent:
                 logger.warning("First group returned 0 posts — session likely expired!")
-                asyncio.run(send_session_expired_alert())
+                send_session_expired_alert()
                 _session_alert_sent = True
             return
         elif len(posts) > 0:
@@ -133,9 +134,15 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
 
             sheet.append_listing(parsed, post["url"])
             added += 1
+            _batch_counter += 1
 
             if parsed.get("is_catch"):
-                asyncio.run(send_catch_alert(parsed, post["url"]))
+                send_catch_alert(parsed, post["url"])
+
+        # Send batch alert every 5 new listings
+        if _batch_counter >= BATCH_ALERT_THRESHOLD:
+            send_batch_alert(_batch_counter)
+            _batch_counter = 0
 
         logger.info(
             "Results: %d added, %d filtered, %d non-listings, %d already seen",
