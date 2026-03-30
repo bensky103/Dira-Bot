@@ -19,7 +19,7 @@ Automated apartment hunter for the Israeli rental market. Scrapes Facebook group
 - A Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - A Google Cloud service account with Sheets API enabled
 
-## Local Setup
+## Setup
 
 ### 1. Clone and install
 
@@ -78,43 +78,19 @@ python run.py
 
 On first run, Firefox will open for you to log into Facebook manually. After login, press ENTER in the terminal. The session is saved to `session.json` and reused for all future headless runs.
 
-## Railway Deployment
-
-### 1. Create a Railway project
-
-- Link your GitHub repo to a new Railway service
-- Add a **Volume** mounted at `/data` (this persists `seen_urls.json` across deploys)
-
-### 2. Set environment variables
-
-In the Railway service **Variables** tab, add all the variables from `.env`, plus these two:
-
-| Variable | Value |
-|----------|-------|
-| `SESSION_JSON` | Full contents of your local `session.json` |
-| `SERVICE_ACCOUNT_JSON` | Full contents of your local `service_account.json` |
-
-These are written to the `/data` volume on first startup.
-
-### 3. Deploy
-
-Push to your repo. Railway builds from the Dockerfile and starts the bot.
-
 ### Session Expiry
 
 Facebook sessions expire periodically. When this happens:
 1. The bot sends a Telegram alert
-2. Run `python run.py` locally to generate a new `session.json`
-3. Update the `SESSION_JSON` env var on Railway with the new file contents
-4. Delete `/data/session.json` from the Railway volume (via `railway shell` then `rm /data/session.json`)
-5. Redeploy
+2. Stop the bot
+3. Delete `session.json`
+4. Run `python run.py` and log in again when Firefox opens
 
 ## Project Structure
 
 ```
 Dira-Bot/
-├── run.py              # Entry point — seeds volume, starts bot
-├── Dockerfile          # Railway container build
+├── run.py              # Entry point
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Template for environment variables
 └── src/

@@ -30,10 +30,9 @@ async def send_session_expired_alert():
         "Facebook session is no longer valid.\n"
         "The bot cannot scrape private groups.\n\n"
         "To fix:\n"
-        "1. Run `python run.py` locally\n"
-        "2. Log in when Firefox opens\n"
-        "3. Update the `SESSION_JSON` env var on Railway\n"
-        "4. Delete `/data/session.json` from the volume and redeploy"
+        "1. Stop the bot\n"
+        "2. Delete `session.json`\n"
+        "3. Run `python run.py` and log in when Firefox opens"
     )
     await _send_to_all(msg)
 
