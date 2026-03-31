@@ -45,6 +45,7 @@ class SheetClient:
         row = [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             parsed.get("city", ""),
+            parsed.get("area", ""),
             parsed.get("street", ""),
             parsed.get("price_nis", ""),
             parsed.get("rooms", ""),

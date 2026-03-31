@@ -53,13 +53,36 @@ GROUPS = [
 
 # ── Listing Filters (set to None to disable) ──
 FILTERS = {
-    "min_rooms": 1,
-    "max_rooms": 3,
+    "min_rooms": 2,
+    "max_rooms": None,
     "min_sqm": 40,
     "max_sqm": None,
     "min_price": None,
     "max_price": 6000,
     "cities": ["גבעתיים" ,"תל אביב", "רמת גן"],
+    # Map city -> list of allowed areas. None or missing city = allow all areas.
+    "areas": {
+        # "תל אביב": ["צפון ישן", "הצפון החדש", "לב העיר"],
+        # "רמת גן": ["מרכז", "גבול גבעתיים"],
+    },
+    # Streets to exclude (case-insensitive Hebrew match)
+    "excluded_streets": [
+        # "דוגמה",
+    ],
+}
+
+# ── "Is Catch" Filters — separate thresholds for catch detection ──
+# Same keys as FILTERS. When is_catch is True, the listing must also
+# pass these filters to be marked as a catch.
+IS_CATCH_FILTERS = {
+    "min_rooms": 2,
+    "max_rooms": None,
+    "min_sqm": 50,
+    "max_sqm": None,
+    "min_price": None,
+    "max_price": 5000,
+    "cities": ["תל אביב"],
+    "areas": None,
 }
 
 # ── Scraping Intervals ──
@@ -69,5 +92,5 @@ GROUP_JITTER_RANGE = 60  # +/- seconds
 
 # ── Sheet Schema ──
 SHEET_HEADERS = [
-    "Timestamp", "City", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch"
+    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch"
 ]

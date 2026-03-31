@@ -167,51 +167,101 @@ class Scraper:
                     if (postText.length < 30) continue;
 
                     // Find post URL — check multiple FB URL patterns
+                    // Helper to normalize FB hrefs into full URLs
+                    const normalizeHref = (href) => {
+                        const clean = href.split('?')[0];
+                        return clean.startsWith('/')
+                            ? 'https://www.facebook.com' + clean
+                            : clean;
+                    };
+
+                    // Extract group slug from the page URL for building permalinks
+                    const pageUrl = window.location.href;
+                    const groupMatch = pageUrl.match(/groups\\/([^\\/?]+)/);
+                    const groupSlug = groupMatch ? groupMatch[1] : '';
+
                     let postUrl = '';
                     const links = child.querySelectorAll('a[href]');
-                    for (const link of links) {
-                        const href = link.getAttribute('href') || '';
+                    const allHrefs = Array.from(links).map(l => l.getAttribute('href') || '');
+
+                    // 1. Explicit post-URL patterns (commerce listings, posts, permalinks)
+                    for (const href of allHrefs) {
                         if (href.includes('/posts/') ||
                             href.includes('/permalink/') ||
+                            href.includes('/story.php') ||
                             href.includes('/commerce/listing/') ||
-                            href.includes('/marketplace/item/') ||
-                            href.includes('/p/')) {
-                            postUrl = href.startsWith('/')
-                                ? 'https://www.facebook.com' + href.split('?')[0]
-                                : href.split('?')[0];
+                            href.includes('/marketplace/item/')) {
+                            postUrl = normalizeHref(href);
                             break;
                         }
                     }
-                    // Fallback: look for any link with a numeric post/listing ID
-                    if (!postUrl) {
-                        const idPatterns = [
-                            new RegExp('groups/[0-9]+/[0-9]+'),
-                            new RegExp('groups/[^/]+/posts'),
-                            new RegExp('listing/[0-9]+'),
-                        ];
-                        for (const link of links) {
-                            const href = link.getAttribute('href') || '';
-                            if (idPatterns.some(re => re.test(href))) {
-                                postUrl = href.startsWith('/')
-                                    ? 'https://www.facebook.com' + href.split('?')[0]
-                                    : href.split('?')[0];
+
+                    // 2. Extract post ID from photo links (set=pcb.POSTID)
+                    if (!postUrl && groupSlug) {
+                        for (const href of allHrefs) {
+                            const pcbMatch = href.match(/set=pcb\\.([0-9]+)/);
+                            if (pcbMatch) {
+                                postUrl = 'https://www.facebook.com/groups/' +
+                                          groupSlug + '/posts/' + pcbMatch[1];
                                 break;
                             }
                         }
                     }
 
+                    // 3. Any link with a numeric post/listing ID
+                    if (!postUrl) {
+                        for (const href of allHrefs) {
+                            if (/groups\\/[^/]+\\/posts\\/[0-9]+/.test(href) ||
+                                /groups\\/[0-9]+\\/[0-9]+/.test(href) ||
+                                /listing\\/[0-9]+/.test(href)) {
+                                postUrl = normalizeHref(href);
+                                break;
+                            }
+                        }
+                    }
+
+                    // 4. Search the raw HTML for embedded post IDs
+                    //    Facebook embeds post IDs in data attributes & encoded
+                    //    JSON even when no visible permalink link exists
+                    //    (e.g. text-only posts with no photos).
+                    if (!postUrl && groupSlug) {
+                        const html = child.innerHTML;
+                        const idMatch =
+                            html.match(/story_fbid[=:]([0-9]{10,})/) ||
+                            html.match(/"post_id":"([0-9]{10,})"/) ||
+                            html.match(/"top_level_post_id":"([0-9]{10,})"/) ||
+                            html.match(/"content_id":"([0-9]{10,})"/);
+                        if (idMatch) {
+                            postUrl = 'https://www.facebook.com/groups/' +
+                                      groupSlug + '/posts/' + idMatch[1];
+                        }
+                    }
+
+                    // 5. Last resort: hash the post text for a unique ID.
+                    //    This prevents using the bare group URL (which breaks
+                    //    deduplication — every linkless post would share the
+                    //    same "URL" and only the first would ever be stored).
+                    if (!postUrl) {
+                        let hash = 0;
+                        for (let i = 0; i < postText.length; i++) {
+                            hash = ((hash << 5) - hash) + postText.charCodeAt(i);
+                            hash |= 0;
+                        }
+                        postUrl = '__no_link__' + Math.abs(hash).toString(36);
+                    }
+
                     results.push({
                         text: postText,
-                        url: postUrl || ''
+                        url: postUrl
                     });
                 }
                 return results;
             }""")
 
-            # Fill in group URL for posts without a direct link
-            for post in posts:
-                if not post["url"]:
-                    post["url"] = group_url
+            # Log posts with missing links for debugging
+            no_link = sum(1 for p in posts if p["url"].startswith("__no_link__"))
+            if no_link:
+                logger.warning("%d/%d posts had no extractable link", no_link, len(posts))
 
             logger.info("Extracted %d posts from %s", len(posts), group_url)
 
