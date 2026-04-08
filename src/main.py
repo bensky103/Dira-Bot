@@ -165,6 +165,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
         added = 0
         skipped = 0
         filtered = 0
+        duplicates = 0
         for post in new_posts:
             _seen_urls.add(post["url"])
 
@@ -177,6 +178,14 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
             if reason:
                 logger.info("Filtered out: %s (%s)", parsed.get("city", "?"), reason)
                 filtered += 1
+                continue
+
+            if sheet.is_duplicate_listing(parsed):
+                logger.info(
+                    "Duplicate listing skipped: %s %s %s NIS",
+                    parsed.get("city", "?"), parsed.get("street", "?"), parsed.get("price_nis", "?"),
+                )
+                duplicates += 1
                 continue
 
             sheet.append_listing(parsed, post["url"])
@@ -192,8 +201,8 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
             _batch_counter = 0
 
         logger.info(
-            "Results: %d added, %d filtered, %d non-listings, %d already seen",
-            added, filtered, skipped, len(posts) - len(new_posts),
+            "Results: %d added, %d filtered, %d duplicates, %d non-listings, %d already seen",
+            added, filtered, duplicates, skipped, len(posts) - len(new_posts),
         )
         _save_seen(_seen_urls)
 

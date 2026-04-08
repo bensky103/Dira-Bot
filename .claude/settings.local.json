@@ -22,7 +22,8 @@
       "Bash(railway volume:*)",
       "Bash(railway shell:*)",
       "Bash(railway run:*)",
-      "Bash(PYTHONIOENCODING=utf-8 python debug_links.py)"
+      "Bash(PYTHONIOENCODING=utf-8 python debug_links.py)",
+      "Bash(python -c \":*)"
     ]
   }
 }

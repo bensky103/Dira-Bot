@@ -3,6 +3,7 @@ import logging
 from openai import OpenAI
 
 from src.config import OPENAI_API_KEY
+from src.geocoder import resolve_area
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +79,21 @@ def parse_post(text: str) -> dict | None:
             logger.info("  -> Skipped (not a listing)")
             return None
 
+        area = data.get("area", "")
+        street = data.get("street", "")
+        city = data.get("city", "")
+
+        # Fallback to geocoding if LLM couldn't determine the area
+        if (not area or area == "לא ידוע") and street and city:
+            geocoded_area = resolve_area(street, city)
+            if geocoded_area:
+                logger.info("  Geocoding fallback: area resolved to '%s'", geocoded_area)
+                area = geocoded_area
+
         result = {
-            "city": data.get("city", ""),
-            "area": data.get("area", ""),
-            "street": data.get("street", ""),
+            "city": city,
+            "area": area,
+            "street": street,
             "price_nis": data.get("price_nis", 0),
             "rooms": data.get("rooms", 0),
             "sqm": data.get("sqm", 0),

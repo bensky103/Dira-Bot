@@ -28,11 +28,53 @@ class SheetClient:
         self._known_links: set[str] = set(self._sheet.col_values(
             SHEET_HEADERS.index("Link") + 1
         ))
+        # Cache composite keys (street, price, rooms, sqm) for cross-group dedup
+        self._known_composites: set[tuple] = self._load_composite_keys()
 
     def _ensure_headers(self):
         first_row = self._sheet.row_values(1)
         if first_row != SHEET_HEADERS:
             self._sheet.update("A1", [SHEET_HEADERS])
+
+    def _load_composite_keys(self) -> set[tuple]:
+        """Load composite keys from existing sheet rows for cross-group dedup."""
+        keys = set()
+        all_rows = self._sheet.get_all_values()
+        # Skip header row
+        for row in all_rows[1:]:
+            if len(row) >= 7:
+                street = row[SHEET_HEADERS.index("Street")]
+                price = row[SHEET_HEADERS.index("Price")]
+                rooms = row[SHEET_HEADERS.index("Rooms")]
+                sqm = row[SHEET_HEADERS.index("Size")]
+                key = self._make_composite_key(street, price, rooms, sqm)
+                if key:
+                    keys.add(key)
+        logger.info("Loaded %d composite keys for dedup", len(keys))
+        return keys
+
+    @staticmethod
+    def _make_composite_key(street, price, rooms, sqm) -> tuple | None:
+        """Build a composite key tuple. Returns None if street or price is missing."""
+        street = str(street).strip()
+        price = str(price).strip()
+        rooms = str(rooms).strip()
+        sqm = str(sqm).strip()
+        if not street or not price:
+            return None
+        return (street, price, rooms, sqm)
+
+    def is_duplicate_listing(self, parsed: dict) -> bool:
+        """Check if a listing with the same street+price+rooms+sqm already exists."""
+        key = self._make_composite_key(
+            parsed.get("street", ""),
+            parsed.get("price_nis", ""),
+            parsed.get("rooms", ""),
+            parsed.get("sqm", ""),
+        )
+        if key and key in self._known_composites:
+            return True
+        return False
 
     def link_exists(self, link: str) -> bool:
         return link in self._known_links
@@ -56,4 +98,13 @@ class SheetClient:
         ]
         self._sheet.append_row(row, value_input_option="USER_ENTERED")
         self._known_links.add(link)
+        # Track composite key for cross-group dedup
+        key = self._make_composite_key(
+            parsed.get("street", ""),
+            parsed.get("price_nis", ""),
+            parsed.get("rooms", ""),
+            parsed.get("sqm", ""),
+        )
+        if key:
+            self._known_composites.add(key)
         logger.info("Row added: %s – %s", parsed.get("city"), link)

@@ -13,12 +13,20 @@ TELEGRAM_CHAT_IDS = [
     cid.strip() for cid in os.environ["TELEGRAM_CHAT_IDS"].split(",") if cid.strip()
 ]
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Dira-Bot")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 # ── Facebook Groups ──
 GROUPS = [
     "https://www.facebook.com/groups/287564448778602/", #צפון תל אביב התחלה
     "https://www.facebook.com/groups/196649476429218/",
     "https://www.facebook.com/groups/telavivrentals/", #צפון תל אביב סוף
+    "https://www.facebook.com/groups/647901439404148/", #רמת גן גבעתיים התחלה
+    "https://www.facebook.com/groups/253957624766723/",
+    "https://www.facebook.com/groups/402682483445663/",
+    "https://www.facebook.com/groups/1774413905909921/",
+    "https://www.facebook.com/groups/1456553661265604",
+    "https://www.facebook.com/groups/1870209196564360/",
+    "https://www.facebook.com/groups/1424244737803677/", #רמת גן גבעתיים סוף
     "https://www.facebook.com/groups/tlvrent/",
     "https://www.facebook.com/groups/35819517694/",
     "https://www.facebook.com/groups/295395253832427/",
@@ -43,9 +51,6 @@ GROUPS = [
     "https://www.facebook.com/groups/2541381749432833/",
     "https://www.facebook.com/groups/333022240594651/",
     "https://www.facebook.com/groups/1749183625345821/",
-    "https://www.facebook.com/groups/647901439404148/", #רמת גן גבעתיים התחלה
-    "https://www.facebook.com/groups/1870209196564360/",
-    "https://www.facebook.com/groups/1424244737803677/", #רמת גן גבעתיים סוף
     "https://www.facebook.com/groups/101875683484689/",
     "https://www.facebook.com/groups/291753646078748/",
     "https://www.facebook.com/groups/196649476429218/",
