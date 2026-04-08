@@ -16,8 +16,9 @@ Your job: extract structured data from Facebook posts about WHOLE apartments for
 CRITICAL — SKIP these types of posts (return {"skip": true}):
 1. Shared apartments / roommate posts (דירת שותפים, שותף/ה, חדר בדירה משותפת, חדר בשותפות, מחפש/ת שותף/ה, room in shared apartment, רום מייט, חדר להשכרה בדירה, חדר פנוי בדירה)
 2. Posts renting out a single room within an existing apartment (NOT a whole apartment)
-3. Someone looking/searching for an apartment (מחפש/ת דירה)
-4. Questions, jokes, comments, group rules, spam, or unrelated content
+3. Studio apartments (דירת סטודיו, סטודיו)
+4. Someone looking/searching for an apartment (מחפש/ת דירה)
+5. Questions, jokes, comments, group rules, spam, or unrelated content
 
 Indicators of a roommate/shared apartment post:
 - Mentions "שותפים", "שותף", "שותפה", "שיתוף", "חדר בדירת"
