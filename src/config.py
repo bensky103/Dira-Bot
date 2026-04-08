@@ -60,7 +60,7 @@ GROUPS = [
 FILTERS = {
     "min_rooms": 2,
     "max_rooms": None,
-    "min_sqm": 40,
+    "min_sqm": 50,
     "max_sqm": None,
     "min_price": None,
     "max_price": 6000,
