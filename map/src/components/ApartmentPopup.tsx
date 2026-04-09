@@ -11,10 +11,13 @@ export default function ApartmentPopup({ apartment }: ApartmentPopupProps) {
         <span className="area-name">{apartment.area}</span>
         {apartment.isCatch && <span className="catch-badge">🔥 CATCH</span>}
       </div>
+      {apartment.street && (
+        <div className="popup-street">{apartment.street}</div>
+      )}
       <div className="popup-details">
         <div className="detail-row">
           <span className="detail-label">Price</span>
-          <span className="detail-value">
+          <span className="detail-value price">
             ₪{apartment.price.toLocaleString()}
           </span>
         </div>
@@ -25,7 +28,7 @@ export default function ApartmentPopup({ apartment }: ApartmentPopupProps) {
         {apartment.size > 0 && (
           <div className="detail-row">
             <span className="detail-label">Size</span>
-            <span className="detail-value">{apartment.size} sqm</span>
+            <span className="detail-value">{apartment.size} m²</span>
           </div>
         )}
       </div>

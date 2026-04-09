@@ -8,3 +8,6 @@ chrome_profile/
 __pycache__/
 *.pyc
 logs/
+
+# Superpowers brainstorm files
+.superpowers/

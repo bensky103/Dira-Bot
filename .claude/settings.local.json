@@ -23,7 +23,22 @@
       "Bash(railway shell:*)",
       "Bash(railway run:*)",
       "Bash(PYTHONIOENCODING=utf-8 python debug_links.py)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(bash \"C:\\\\Users\\\\Guy Bensky\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\superpowers\\\\5.0.7\\\\scripts\\\\start-server.sh\" --project-dir \"c:\\\\Users\\\\Guy Bensky\\\\Desktop\\\\Elevize\\\\Dira-Bot\")",
+      "Bash(bash \"C:/Users/Guy Bensky/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/Users/Guy Bensky/Desktop/Elevize/Dira-Bot\")",
+      "Bash(find \"c:/Users/Guy Bensky/Desktop/Elevize/Dira-Bot/.superpowers/brainstorm/\" -name \"server-info\" -exec cat {} \\\\;)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npx create-next-app@latest map --typescript --app --src-dir --no-tailwind --no-eslint --import-alias \"@/*\" --use-npm)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node -e \"console.log\\(require\\('./package.json'\\).dependencies.next\\)\")",
+      "Bash(npx tsc:*)",
+      "Bash(python -c \"import json; print\\(json.dumps\\(json.load\\(open\\('service_account.json'\\)\\)\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/apartments\")",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(f'Total: {len\\(data\\)}'\\); print\\(f'Catches: {sum\\(1 for a in data if a[\\\\\"isCatch\\\\\"]\\)}'\\); cities={}; [cities.update\\({a[\\\\\"city\\\\\"]: cities.get\\(a[\\\\\"city\\\\\"],0\\)+1}\\) for a in data]; print\\('By city:', cities\\)\")"
     ]
   }
 }

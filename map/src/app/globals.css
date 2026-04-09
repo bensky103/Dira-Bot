@@ -201,84 +201,137 @@ body {
   height: 100vh;
 }
 
+/* ── Leaflet Popup Overrides (need !important to beat leaflet.css) ── */
 .leaflet-popup-content-wrapper {
-  background: #1e293b;
-  color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  padding: 0;
+  background: #1e293b !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+  padding: 0 !important;
+  overflow: hidden;
 }
 
 .leaflet-popup-content {
-  margin: 0;
-  min-width: 180px;
+  margin: 0 !important;
+  min-width: 220px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .leaflet-popup-tip {
-  background: #1e293b;
+  background: #1e293b !important;
 }
 
+.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 20px !important;
+  top: 6px !important;
+  right: 8px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+/* ── Popup Card ── */
 .popup-card {
-  padding: 14px;
+  padding: 16px 18px;
 }
 
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #334155;
 }
 
 .popup-header .area-name {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #f1f5f9;
+  direction: rtl;
 }
 
 .popup-header .catch-badge {
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #fff;
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: 600;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 .popup-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .popup-details .detail-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
 }
 
 .popup-details .detail-label {
-  color: #888;
+  color: #94a3b8;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .popup-details .detail-value {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.popup-details .detail-value.price {
+  color: #34d399;
+  font-size: 15px;
+}
+
+.popup-street {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: -6px;
+  margin-bottom: 8px;
+  direction: rtl;
 }
 
 .popup-link {
   display: block;
-  margin-top: 10px;
+  margin-top: 12px;
   text-align: center;
-  background: #3b82f6;
-  color: #fff;
-  padding: 6px;
-  border-radius: 5px;
-  font-size: 12px;
-  text-decoration: none;
-  transition: background 0.15s;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff !important;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
 }
 
 .popup-link:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  color: #fff !important;
+}
+
+.popup-link:visited,
+.popup-link:active {
+  color: #fff !important;
 }
 
 .area-circle {
