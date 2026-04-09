@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from "next/server";
+import { fetchApartments } from "@/lib/sheets";
+import { geocodeAddress } from "@/lib/geocode";
+import { getNeighborhoodCoords } from "@/lib/neighborhoods";
+import { hashOffset } from "@/lib/hashOffset";
+import type { Apartment } from "@/types/apartment";
+
+// Simple in-memory cache
+let cache: { data: Apartment[]; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function resolveCoordinates(
+  street: string,
+  city: string,
+  area: string,
+  link: string
+): Promise<{ lat: number; lng: number }> {
+  // Try geocoding if street exists
+  if (street) {
+    const geocoded = await geocodeAddress(street, city);
+    if (geocoded) return geocoded;
+  }
+
+  // Fall back to neighborhood lookup with deterministic offset
+  const neighborhoodCoords = getNeighborhoodCoords(city, area);
+  if (neighborhoodCoords) {
+    const offset = hashOffset(link);
+    return {
+      lat: neighborhoodCoords.lat + offset.dlat,
+      lng: neighborhoodCoords.lng + offset.dlng,
+    };
+  }
+
+  // Last resort: Tel Aviv center
+  return { lat: 32.075, lng: 34.78 };
+}
+
+async function loadApartments(): Promise<Apartment[]> {
+  const rows = await fetchApartments();
+
+  const apartments: Apartment[] = await Promise.all(
+    rows.map(async (row) => {
+      const coords = await resolveCoordinates(
+        row.street,
+        row.city,
+        row.area,
+        row.link
+      );
+
+      return {
+        timestamp: row.timestamp,
+        city: row.city,
+        area: row.area,
+        street: row.street,
+        price: parseFloat(row.price) || 0,
+        rooms: parseFloat(row.rooms) || 0,
+        size: parseFloat(row.size) || 0,
+        phone: row.phone,
+        link: row.link,
+        isCatch: row.isCatch === "True" || row.isCatch === "true",
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+    })
+  );
+
+  return apartments.filter((a) => a.price > 0 && a.lat !== 0);
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const force = request.nextUrl.searchParams.get("force") === "true";
+
+    if (!force && cache && Date.now() - cache.timestamp < CACHE_TTL) {
+      return NextResponse.json(cache.data, {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
+    const apartments = await loadApartments();
+    cache = { data: apartments, timestamp: Date.now() };
+
+    return NextResponse.json(apartments, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+        "X-Cache": "MISS",
+      },
+    });
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch apartments" },
+      { status: 500 }
+    );
+  }
+}
