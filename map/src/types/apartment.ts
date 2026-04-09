@@ -1,0 +1,14 @@
+export interface Apartment {
+  timestamp: string;
+  city: string;
+  area: string;
+  street: string;
+  price: number;
+  rooms: number;
+  size: number;
+  phone: string;
+  link: string;
+  isCatch: boolean;
+  lat: number;
+  lng: number;
+}
