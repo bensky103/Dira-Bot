@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 
 export interface Filters {
   timeRange: string;
+  minPrice: number;
   maxPrice: number;
+  minSqm: number;
+  maxSqm: number;
   rooms: number[];
   catchesOnly: boolean;
   cities: string[];
@@ -31,8 +34,6 @@ export default function Sidebar({
   onRefresh,
   lastUpdated,
 }: SidebarProps) {
-  const [maxPrice, setMaxPrice] = useState(filters.maxPrice);
-
   const setTimeRange = useCallback(
     (t: string) => onFiltersChange({ ...filters, timeRange: t }),
     [filters, onFiltersChange]
@@ -64,10 +65,34 @@ export default function Sidebar({
     [filters, onFiltersChange]
   );
 
-  const handlePriceChange = useCallback(
-    (val: number) => {
-      setMaxPrice(val);
-      onFiltersChange({ ...filters, maxPrice: val });
+  const handleMinPrice = useCallback(
+    (val: string) => {
+      const num = parseInt(val) || 0;
+      onFiltersChange({ ...filters, minPrice: num });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const handleMaxPrice = useCallback(
+    (val: string) => {
+      const num = parseInt(val) || 0;
+      onFiltersChange({ ...filters, maxPrice: num });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const handleMinSqm = useCallback(
+    (val: string) => {
+      const num = parseInt(val) || 0;
+      onFiltersChange({ ...filters, minSqm: num });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const handleMaxSqm = useCallback(
+    (val: string) => {
+      const num = parseInt(val) || 0;
+      onFiltersChange({ ...filters, maxSqm: num });
     },
     [filters, onFiltersChange]
   );
@@ -111,20 +136,44 @@ export default function Sidebar({
       </div>
 
       <div>
-        <div className="filter-label">Max Price (₪)</div>
-        <div className="price-range">
-          <span className="price-value">0</span>
+        <div className="filter-label">Price Range (₪)</div>
+        <div className="price-inputs">
           <input
-            type="range"
-            min={0}
-            max={10000}
-            step={500}
-            value={maxPrice}
-            onChange={(e) => handlePriceChange(Number(e.target.value))}
+            type="number"
+            className="price-box"
+            placeholder="Min"
+            value={filters.minPrice || ""}
+            onChange={(e) => handleMinPrice(e.target.value)}
           />
-          <span className="price-value">
-            {maxPrice === 10000 ? "10k+" : maxPrice.toLocaleString()}
-          </span>
+          <span className="price-separator">—</span>
+          <input
+            type="number"
+            className="price-box"
+            placeholder="Max"
+            value={filters.maxPrice || ""}
+            onChange={(e) => handleMaxPrice(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className="filter-label">Size (m²)</div>
+        <div className="price-inputs">
+          <input
+            type="number"
+            className="price-box"
+            placeholder="Min"
+            value={filters.minSqm || ""}
+            onChange={(e) => handleMinSqm(e.target.value)}
+          />
+          <span className="price-separator">—</span>
+          <input
+            type="number"
+            className="price-box"
+            placeholder="Max"
+            value={filters.maxSqm || ""}
+            onChange={(e) => handleMaxSqm(e.target.value)}
+          />
         </div>
       </div>
 

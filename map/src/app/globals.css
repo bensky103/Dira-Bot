@@ -176,24 +176,43 @@ body {
   margin-top: 4px;
 }
 
-.price-range {
+.price-inputs {
   display: flex;
   gap: 6px;
   align-items: center;
-  font-size: 12px;
-  color: #ccc;
 }
 
-.price-range input[type="range"] {
+.price-box {
   flex: 1;
-  accent-color: #3b82f6;
+  background: #2a2a4a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
 }
 
-.price-range .price-value {
-  min-width: 50px;
-  text-align: center;
-  color: #fff;
-  font-size: 12px;
+.price-box::-webkit-outer-spin-button,
+.price-box::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.price-box:focus {
+  border-color: #3b82f6;
+}
+
+.price-box::placeholder {
+  color: #666;
+}
+
+.price-separator {
+  color: #666;
+  font-size: 14px;
 }
 
 .map-container {

@@ -7,7 +7,10 @@ import type { Apartment } from "@/types/apartment";
 
 const DEFAULT_FILTERS: Filters = {
   timeRange: "7d",
-  maxPrice: 10000,
+  minPrice: 0,
+  maxPrice: 0,
+  minSqm: 0,
+  maxSqm: 0,
   rooms: [],
   catchesOnly: false,
   cities: ["תל אביב", "רמת גן", "גבעתיים"],
@@ -63,7 +66,15 @@ export default function Home() {
       if (apt.timestamp && new Date(apt.timestamp) < threshold) return false;
 
       // Price filter
-      if (filters.maxPrice < 10000 && apt.price > filters.maxPrice)
+      if (filters.minPrice && apt.price && apt.price < filters.minPrice)
+        return false;
+      if (filters.maxPrice && apt.price && apt.price > filters.maxPrice)
+        return false;
+
+      // Sqm filter
+      if (filters.minSqm && apt.size && apt.size < filters.minSqm)
+        return false;
+      if (filters.maxSqm && apt.size && apt.size > filters.maxSqm)
         return false;
 
       // Rooms filter (empty = all rooms)
