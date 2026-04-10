@@ -23,11 +23,12 @@ body {
   width: 260px;
   min-width: 260px;
   background: #1a1a2e;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
   color: #fff;
   z-index: 1000;
 }
@@ -212,18 +213,19 @@ body {
 
 .price-inputs {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
 }
 
 .price-box {
   flex: 1;
+  min-width: 0;
   background: #2a2a4a;
   border: 1px solid #444;
   color: #fff;
   border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 13px;
+  padding: 6px 4px;
+  font-size: 12px;
   text-align: center;
   outline: none;
   transition: border-color 0.15s;
@@ -247,6 +249,7 @@ body {
 .price-separator {
   color: #666;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 /* ── Catch Config ── */
