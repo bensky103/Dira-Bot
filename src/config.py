@@ -57,23 +57,18 @@ GROUPS = [
 ]
 
 # ── Listing Filters (set to None to disable) ──
+# Preference filters removed — the bot now saves all valid listings.
+# Filtering by price/rooms/area/city is done in the map UI instead.
 FILTERS = {
-    "min_rooms": 2,
+    "min_rooms": None,
     "max_rooms": None,
-    "min_sqm": 50,
+    "min_sqm": None,
     "max_sqm": None,
     "min_price": None,
-    "max_price": 6000,
-    "cities": ["גבעתיים" ,"תל אביב", "רמת גן"],
-    # Map city -> list of allowed areas. None or missing city = allow all areas.
-    "areas": {
-        # "תל אביב": ["צפון ישן", "הצפון החדש", "לב העיר"],
-        # "רמת גן": ["מרכז", "גבול גבעתיים"],
-    },
-    # Streets to exclude (case-insensitive Hebrew match)
-    "excluded_streets": [
-        # "דוגמה",
-    ],
+    "max_price": None,
+    "cities": None,
+    "areas": None,
+    "excluded_streets": [],
 }
 
 # ── "Is Catch" Filters — separate thresholds for catch detection ──

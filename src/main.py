@@ -88,11 +88,9 @@ def _apply_filters(parsed: dict, f: dict) -> str | None:
 
 def check_filters(parsed: dict) -> str | None:
     """Return a reason string if the listing should be excluded, or None if it passes."""
-    # Require price and street to be populated
-    if not parsed.get("price_nis"):
-        return "missing price"
-    if not parsed.get("street"):
-        return "missing street"
+    # Only require a city — everything else is optional
+    if not parsed.get("city"):
+        return "missing city"
 
     return _apply_filters(parsed, FILTERS)
 
@@ -139,6 +137,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
     """Run one full scrape-parse-store cycle across all groups."""
     global _session_alert_sent, _batch_counter
     _cleanup_screenshots()
+    sheet.cleanup_stale_rows()
 
     for i, group_url in enumerate(GROUPS):
         logger.info("Scraping group %d/%d: %s", i + 1, len(GROUPS), group_url)

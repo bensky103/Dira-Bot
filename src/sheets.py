@@ -1,11 +1,13 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import gspread
 from google.oauth2.service_account import Credentials
 
 from src.config import GOOGLE_SHEET_NAME, SHEET_HEADERS, DATA_DIR
+
+STALE_DAYS = 21
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +110,34 @@ class SheetClient:
         if key:
             self._known_composites.add(key)
         logger.info("Row added: %s – %s", parsed.get("city"), link)
+
+    def cleanup_stale_rows(self):
+        """Delete rows older than STALE_DAYS and rebuild in-memory caches."""
+        cutoff = datetime.now() - timedelta(days=STALE_DAYS)
+        all_rows = self._sheet.get_all_values()
+
+        # Find row indices to delete (1-indexed, skip header)
+        stale_indices = []
+        for i, row in enumerate(all_rows[1:], start=2):
+            try:
+                ts = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+                if ts < cutoff:
+                    stale_indices.append(i)
+            except (ValueError, IndexError):
+                continue
+
+        if not stale_indices:
+            logger.info("No stale rows to clean up")
+            return
+
+        # Delete from bottom to top so indices don't shift
+        for idx in reversed(stale_indices):
+            self._sheet.delete_rows(idx)
+
+        logger.info("Cleaned up %d stale rows (older than %d days)", len(stale_indices), STALE_DAYS)
+
+        # Rebuild caches after deletion
+        self._known_links = set(self._sheet.col_values(
+            SHEET_HEADERS.index("Link") + 1
+        ))
+        self._known_composites = self._load_composite_keys()
