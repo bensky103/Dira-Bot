@@ -24,7 +24,8 @@ class SheetClient:
         sa_path = os.path.join(DATA_DIR, "service_account.json")
         creds = Credentials.from_service_account_file(sa_path, scopes=SCOPES)
         gc = gspread.authorize(creds)
-        self._sheet = gc.open(GOOGLE_SHEET_NAME).sheet1
+        self._workbook = gc.open(GOOGLE_SHEET_NAME)
+        self._sheet = self._workbook.sheet1
         self._ensure_headers()
         # Cache links in memory to avoid repeated API calls
         self._known_links: set[str] = set(self._sheet.col_values(
@@ -141,3 +142,29 @@ class SheetClient:
             SHEET_HEADERS.index("Link") + 1
         ))
         self._known_composites = self._load_composite_keys()
+
+    def load_catch_config(self) -> dict | None:
+        """Read catch criteria from the Config sheet tab (written by the map UI)."""
+        try:
+            config_sheet = self._workbook.worksheet("Config")
+        except gspread.exceptions.WorksheetNotFound:
+            logger.info("No Config tab found — using default catch filters")
+            return None
+
+        rows = config_sheet.get_all_values()
+        config = {}
+        for row in rows[1:]:  # skip header
+            if len(row) >= 2:
+                config[row[0]] = row[1]
+
+        if "catch_max_price" not in config:
+            return None
+
+        result = {
+            "max_price": int(config.get("catch_max_price", 0)) or None,
+            "min_rooms": float(config.get("catch_min_rooms", 0)) or None,
+            "min_sqm": int(config.get("catch_min_sqm", 0)) or None,
+            "cities": [c.strip() for c in config.get("catch_cities", "").split(",") if c.strip()] or None,
+        }
+        logger.info("Loaded catch config from sheet: %s", result)
+        return result

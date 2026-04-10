@@ -6,7 +6,7 @@ import random
 import time
 from logging.handlers import RotatingFileHandler
 
-from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, FILTERS, IS_CATCH_FILTERS, DATA_DIR
+from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, DATA_DIR
 from src.scraper import Scraper
 from src.parser import parse_post
 from src.sheets import SheetClient
@@ -45,59 +45,33 @@ for noisy in ("asyncio", "httpx", "httpcore", "urllib3", "google", "gspread", "o
 logger = logging.getLogger(__name__)
 
 
-def _apply_filters(parsed: dict, f: dict) -> str | None:
-    """Return a reason string if the listing fails the given filter dict, or None if it passes."""
+def check_listing_valid(parsed: dict) -> str | None:
+    """Return a reason string if the listing is invalid, or None if it should be saved."""
+    if not parsed.get("city"):
+        return "missing city"
+    return None
+
+
+def check_catch_filters(parsed: dict, catch_config: dict | None) -> bool:
+    """Return True if the listing matches catch criteria from the sheet Config tab."""
+    if not catch_config:
+        return False
+
     price = parsed.get("price_nis", 0)
     rooms = parsed.get("rooms", 0)
     sqm = parsed.get("sqm", 0)
     city = parsed.get("city", "")
-    area = parsed.get("area", "")
 
-    if f.get("min_price") and price and price < f["min_price"]:
-        return f"price {price} < min {f['min_price']}"
-    if f.get("max_price") and price and price > f["max_price"]:
-        return f"price {price} > max {f['max_price']}"
-    if f.get("min_rooms") and rooms and rooms < f["min_rooms"]:
-        return f"rooms {rooms} < min {f['min_rooms']}"
-    if f.get("max_rooms") and rooms and rooms > f["max_rooms"]:
-        return f"rooms {rooms} > max {f['max_rooms']}"
-    if f.get("min_sqm") and sqm and sqm < f["min_sqm"]:
-        return f"sqm {sqm} < min {f['min_sqm']}"
-    if f.get("max_sqm") and sqm and sqm > f["max_sqm"]:
-        return f"sqm {sqm} > max {f['max_sqm']}"
-    if f.get("cities") and city and city not in f["cities"]:
-        return f"city '{city}' not in allowed list"
+    if catch_config.get("max_price") and price and price > catch_config["max_price"]:
+        return False
+    if catch_config.get("min_rooms") and rooms and rooms < catch_config["min_rooms"]:
+        return False
+    if catch_config.get("min_sqm") and sqm and sqm < catch_config["min_sqm"]:
+        return False
+    if catch_config.get("cities") and city and city not in catch_config["cities"]:
+        return False
 
-    # Area filter: if the city has an allowed areas list, check it
-    areas_map = f.get("areas")
-    if areas_map and city and area:
-        allowed_areas = areas_map.get(city)
-        if allowed_areas and area not in allowed_areas:
-            return f"area '{area}' not allowed in '{city}'"
-
-    # Excluded streets filter
-    street = parsed.get("street", "")
-    excluded = f.get("excluded_streets")
-    if excluded and street:
-        for ex in excluded:
-            if ex in street or street in ex:
-                return f"street '{street}' is excluded"
-
-    return None
-
-
-def check_filters(parsed: dict) -> str | None:
-    """Return a reason string if the listing should be excluded, or None if it passes."""
-    # Only require a city — everything else is optional
-    if not parsed.get("city"):
-        return "missing city"
-
-    return _apply_filters(parsed, FILTERS)
-
-
-def check_catch_filters(parsed: dict) -> bool:
-    """Return True if the listing passes the is_catch filter thresholds."""
-    return _apply_filters(parsed, IS_CATCH_FILTERS) is None
+    return True
 
 
 # Persist seen URLs to disk so restarts don't re-process old posts
@@ -138,6 +112,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
     global _session_alert_sent, _batch_counter
     _cleanup_screenshots()
     sheet.cleanup_stale_rows()
+    catch_config = sheet.load_catch_config()
 
     for i, group_url in enumerate(GROUPS):
         logger.info("Scraping group %d/%d: %s", i + 1, len(GROUPS), group_url)
@@ -173,9 +148,9 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
                 skipped += 1
                 continue
 
-            reason = check_filters(parsed)
+            reason = check_listing_valid(parsed)
             if reason:
-                logger.info("Filtered out: %s (%s)", parsed.get("city", "?"), reason)
+                logger.info("Skipped invalid: %s (%s)", parsed.get("city", "?"), reason)
                 filtered += 1
                 continue
 
@@ -191,7 +166,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
             added += 1
             _batch_counter += 1
 
-            if parsed.get("is_catch") and check_catch_filters(parsed):
+            if parsed.get("is_catch") and check_catch_filters(parsed, catch_config):
                 send_catch_alert(parsed, post["url"])
 
         # Send batch alert every 5 new listings

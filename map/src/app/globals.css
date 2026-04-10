@@ -273,6 +273,36 @@ body {
   flex: unset !important;
 }
 
+/* ── Sidebar Toggle ── */
+.sidebar-toggle {
+  position: absolute;
+  top: 12px;
+  left: 260px;
+  z-index: 1001;
+  width: 28px;
+  height: 48px;
+  background: #1a1a2e;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  color: #aaa;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.2s, background 0.15s;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-toggle:hover {
+  background: #2a2a4a;
+  color: #fff;
+}
+
+.sidebar-closed .sidebar-toggle {
+  left: 0;
+}
+
 .map-container {
   flex: 1;
   height: 100vh;

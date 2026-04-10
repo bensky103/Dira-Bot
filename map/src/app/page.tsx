@@ -72,6 +72,36 @@ export default function Home() {
     }
   }, []);
 
+  // Load catch config from sheet on mount
+  useEffect(() => {
+    fetch("/api/catch-config")
+      .then((res) => res.json())
+      .then((config) => {
+        if (config && !config.error) {
+          setFilters((prev) => ({ ...prev, catchCriteria: config }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Save catch config to sheet when it changes
+  const handleFiltersChange = useCallback(
+    (newFilters: Filters) => {
+      const catchChanged =
+        JSON.stringify(newFilters.catchCriteria) !==
+        JSON.stringify(filters.catchCriteria);
+      setFilters(newFilters);
+      if (catchChanged) {
+        fetch("/api/catch-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newFilters.catchCriteria),
+        }).catch(() => {});
+      }
+    },
+    [filters.catchCriteria]
+  );
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -123,16 +153,27 @@ export default function Home() {
 
   const catchCount = filtered.filter((a) => a.isCatch).length;
 
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div className="page">
-      <Sidebar
-        totalCount={filtered.length}
-        catchCount={catchCount}
-        filters={filters}
-        onFiltersChange={setFilters}
-        onRefresh={() => fetchData(true)}
-        lastUpdated={lastUpdated}
-      />
+    <div className={`page ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      {sidebarOpen && (
+        <Sidebar
+          totalCount={filtered.length}
+          catchCount={catchCount}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onRefresh={() => fetchData(true)}
+          lastUpdated={lastUpdated}
+        />
+      )}
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        title={sidebarOpen ? "Hide filters" : "Show filters"}
+      >
+        {sidebarOpen ? "◀" : "▶"}
+      </button>
       {loading && apartments.length === 0 ? (
         <div
           style={{

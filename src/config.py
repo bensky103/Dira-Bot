@@ -56,35 +56,6 @@ GROUPS = [
     "https://www.facebook.com/groups/196649476429218/",
 ]
 
-# ── Listing Filters (set to None to disable) ──
-# Preference filters removed — the bot now saves all valid listings.
-# Filtering by price/rooms/area/city is done in the map UI instead.
-FILTERS = {
-    "min_rooms": None,
-    "max_rooms": None,
-    "min_sqm": None,
-    "max_sqm": None,
-    "min_price": None,
-    "max_price": None,
-    "cities": None,
-    "areas": None,
-    "excluded_streets": [],
-}
-
-# ── "Is Catch" Filters — separate thresholds for catch detection ──
-# Same keys as FILTERS. When is_catch is True, the listing must also
-# pass these filters to be marked as a catch.
-IS_CATCH_FILTERS = {
-    "min_rooms": 2,
-    "max_rooms": None,
-    "min_sqm": 50,
-    "max_sqm": None,
-    "min_price": None,
-    "max_price": 5000,
-    "cities": ["תל אביב"],
-    "areas": None,
-}
-
 # ── Scraping Intervals ──
 CYCLE_INTERVAL_SECONDS = 20 * 60
 GROUP_JITTER_BASE = 180  # seconds between groups
