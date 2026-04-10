@@ -33,6 +33,12 @@ When in doubt about whether it's a shared apartment — skip it.
 
 Extract these fields:
 - city: the city name in Hebrew (e.g. "תל אביב", "רמת גן"). If it says "צפון הישן" or similar neighborhood names, determine which city it's in.
+  CRITICAL — city boundary rules (Tel Aviv / Ramat Gan / Givatayim are NOT interchangeable):
+  • רמת גן streets: בארי, ביאליק (east of אבן גבירול), ז'בוטינסקי (east of נהר הירדן), הרואה, קריניצי, אלכסנדר פן, אבא הלל, חיים עוזר
+  • גבעתיים streets: כצנלסון, בורוכוב, אפרים, שינקין (in גבעתיים context), סירקין, ויצמן (east section)
+  • תל אביב streets: דיזנגוף, בן יהודה, אלנבי, רוטשילד, הירקון, אבן גבירול (west section), בוגרשוב, פרישמן, ארלוזורוב (west section), נמיר
+  • If the post mentions a street that exists in multiple cities, use other context clues (neighborhood names, landmarks, nearby streets) to determine the correct city.
+  • When unsure between adjacent cities, prefer the city explicitly mentioned in the post text. If no city is mentioned, do NOT default to תל אביב — try to infer from the street and area.
 - area: the neighborhood/area within the city in Hebrew. You MUST always determine this field — never return null.
   Infer from the street name, nearby landmarks, or any location hint in the post.
   IMPORTANT: The area must be a REAL neighborhood name (e.g. "צפון ישן", "פלורנטין", "נווה צדק", "הדר יוסף").

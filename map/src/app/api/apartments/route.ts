@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchApartments } from "@/lib/sheets";
 import { geocodeAddress } from "@/lib/geocode";
 import { getNeighborhoodCoords } from "@/lib/neighborhoods";
+import { reverseGeocodeCity } from "@/lib/reverseGeocode";
 import { hashOffset } from "@/lib/hashOffset";
 import type { Apartment } from "@/types/apartment";
 
@@ -14,11 +15,14 @@ async function resolveCoordinates(
   city: string,
   area: string,
   link: string
-): Promise<{ lat: number; lng: number }> {
+): Promise<{ lat: number; lng: number; verifiedCity: string | null }> {
   // Try geocoding if street exists
   if (street) {
     const geocoded = await geocodeAddress(street, city);
-    if (geocoded) return geocoded;
+    if (geocoded) {
+      const realCity = await reverseGeocodeCity(geocoded.lat, geocoded.lng);
+      return { ...geocoded, verifiedCity: realCity };
+    }
   }
 
   // Fall back to neighborhood lookup with deterministic offset
@@ -28,11 +32,12 @@ async function resolveCoordinates(
     return {
       lat: neighborhoodCoords.lat + offset.dlat,
       lng: neighborhoodCoords.lng + offset.dlng,
+      verifiedCity: null, // neighborhood coords are already per-city
     };
   }
 
   // Last resort: Tel Aviv center
-  return { lat: 32.075, lng: 34.78 };
+  return { lat: 32.075, lng: 34.78, verifiedCity: null };
 }
 
 async function loadApartments(): Promise<Apartment[]> {
@@ -49,7 +54,7 @@ async function loadApartments(): Promise<Apartment[]> {
 
       return {
         timestamp: row.timestamp,
-        city: row.city,
+        city: coords.verifiedCity ?? row.city,
         area: row.area,
         street: row.street,
         price: parseFloat(row.price) || 0,

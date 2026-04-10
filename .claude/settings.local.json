@@ -43,7 +43,12 @@
       "Bash(powershell -Command \"Install-Module -Name BurntToast -Force -Scope CurrentUser\")",
       "Bash(powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show\\('test'\\) \")",
       "Bash(powershell -Command '[System.Reflection.Assembly]::LoadWithPartialName\\('\\\\''System.Windows.Forms'\\\\''\\) | Out-Null; $notify = New-Object System.Windows.Forms.NotifyIcon; $notify.Icon = [System.Drawing.SystemIcons]::Information; $notify.Visible = $true; $notify.ShowBalloonTip\\(3000, '\\\\''Claude Code'\\\\'', '\\\\''Permission requested'\\\\'', '\\\\''Info'\\\\''\\); Start-Sleep -Seconds 3; $notify.Dispose\\(\\)')",
-      "Bash(powershell -Command '[System.Reflection.Assembly]::LoadWithPartialName\\('\\\\''System.Windows.Forms'\\\\''\\) | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip\\(5000, '\\\\''Claude Code'\\\\'', '\\\\''Needs your attention'\\\\'', '\\\\''Info'\\\\''\\); [System.Media.SystemSounds]::Exclamation.Play\\(\\); Start-Sleep -Seconds 4; $n.Dispose\\(\\)')"
+      "Bash(powershell -Command '[System.Reflection.Assembly]::LoadWithPartialName\\('\\\\''System.Windows.Forms'\\\\''\\) | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip\\(5000, '\\\\''Claude Code'\\\\'', '\\\\''Needs your attention'\\\\'', '\\\\''Info'\\\\''\\); [System.Media.SystemSounds]::Exclamation.Play\\(\\); Start-Sleep -Seconds 4; $n.Dispose\\(\\)')",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\Guy Bensky\\\\.claude\\\\notify.ps1\" \"Test notification\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/parser.py'\\).read\\(\\)\\); print\\('parser.py: syntax OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/parser.py', encoding='utf-8'\\).read\\(\\)\\); print\\('parser.py: syntax OK'\\)\")",
+      "Bash(npx next:*)",
+      "Bash(powershell -Command 'Get-Process -Name '\\\\''Code'\\\\'' | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Id, MainWindowTitle, MainWindowHandle | Format-Table')"
     ]
   }
 }
