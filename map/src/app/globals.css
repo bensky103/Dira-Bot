@@ -61,11 +61,45 @@ body {
   color: #888;
 }
 
+/* ── Collapsible Sections ── */
+.sidebar .section {
+  border-bottom: 1px solid #2a2a4a;
+  padding-bottom: 10px;
+}
+
+.sidebar .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.sidebar .section-header:hover .filter-label {
+  color: #ccc;
+}
+
+.sidebar .section-chevron {
+  font-size: 12px;
+  color: #666;
+  transition: color 0.15s;
+}
+
+.sidebar .section-header:hover .section-chevron {
+  color: #aaa;
+}
+
+.sidebar .section-body {
+  margin-top: 6px;
+}
+
 .sidebar .filter-label {
   font-size: 11px;
   text-transform: uppercase;
   color: #aaa;
   margin-bottom: 6px;
+  transition: color 0.15s;
 }
 
 .sidebar .btn-group {
@@ -213,6 +247,30 @@ body {
 .price-separator {
   color: #666;
   font-size: 14px;
+}
+
+/* ── Catch Config ── */
+.catch-config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.catch-label {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.catch-input {
+  width: 80px !important;
+  flex: unset !important;
 }
 
 .map-container {

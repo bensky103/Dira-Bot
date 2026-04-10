@@ -38,7 +38,12 @@
       "Bash(npx tsc:*)",
       "Bash(python -c \"import json; print\\(json.dumps\\(json.load\\(open\\('service_account.json'\\)\\)\\)\\)\")",
       "Bash(curl -s \"http://localhost:3000/api/apartments\")",
-      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(f'Total: {len\\(data\\)}'\\); print\\(f'Catches: {sum\\(1 for a in data if a[\\\\\"isCatch\\\\\"]\\)}'\\); cities={}; [cities.update\\({a[\\\\\"city\\\\\"]: cities.get\\(a[\\\\\"city\\\\\"],0\\)+1}\\) for a in data]; print\\('By city:', cities\\)\")"
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(f'Total: {len\\(data\\)}'\\); print\\(f'Catches: {sum\\(1 for a in data if a[\\\\\"isCatch\\\\\"]\\)}'\\); cities={}; [cities.update\\({a[\\\\\"city\\\\\"]: cities.get\\(a[\\\\\"city\\\\\"],0\\)+1}\\) for a in data]; print\\('By city:', cities\\)\")",
+      "Bash(powershell -Command \"if \\(Get-Module -ListAvailable -Name BurntToast\\) { Write-Host 'installed' } else { Write-Host 'not installed' }\")",
+      "Bash(powershell -Command \"Install-Module -Name BurntToast -Force -Scope CurrentUser\")",
+      "Bash(powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show\\('test'\\) \")",
+      "Bash(powershell -Command '[System.Reflection.Assembly]::LoadWithPartialName\\('\\\\''System.Windows.Forms'\\\\''\\) | Out-Null; $notify = New-Object System.Windows.Forms.NotifyIcon; $notify.Icon = [System.Drawing.SystemIcons]::Information; $notify.Visible = $true; $notify.ShowBalloonTip\\(3000, '\\\\''Claude Code'\\\\'', '\\\\''Permission requested'\\\\'', '\\\\''Info'\\\\''\\); Start-Sleep -Seconds 3; $notify.Dispose\\(\\)')",
+      "Bash(powershell -Command '[System.Reflection.Assembly]::LoadWithPartialName\\('\\\\''System.Windows.Forms'\\\\''\\) | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip\\(5000, '\\\\''Claude Code'\\\\'', '\\\\''Needs your attention'\\\\'', '\\\\''Info'\\\\''\\); [System.Media.SystemSounds]::Exclamation.Play\\(\\); Start-Sleep -Seconds 4; $n.Dispose\\(\\)')"
     ]
   }
 }

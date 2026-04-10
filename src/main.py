@@ -121,7 +121,7 @@ _seen_urls = _load_seen()
 
 _session_alert_sent = False
 _batch_counter = 0  # Tracks listings added since last batch alert
-BATCH_ALERT_THRESHOLD = 50
+BATCH_ALERT_THRESHOLD = 100
 
 
 def _cleanup_screenshots():

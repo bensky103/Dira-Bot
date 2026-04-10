@@ -14,7 +14,25 @@ const DEFAULT_FILTERS: Filters = {
   rooms: [],
   catchesOnly: false,
   cities: ["תל אביב", "רמת גן", "גבעתיים"],
+  catchCriteria: {
+    maxPrice: 5000,
+    minRooms: 2,
+    minSqm: 50,
+    cities: ["תל אביב"],
+  },
 };
+
+function matchesCatchCriteria(
+  apt: Apartment,
+  criteria: Filters["catchCriteria"]
+): boolean {
+  if (criteria.maxPrice && apt.price > criteria.maxPrice) return false;
+  if (criteria.minRooms && apt.rooms < criteria.minRooms) return false;
+  if (criteria.minSqm && apt.size && apt.size < criteria.minSqm) return false;
+  if (criteria.cities.length > 0 && !criteria.cities.includes(apt.city))
+    return false;
+  return true;
+}
 
 function getTimeThreshold(range: string): Date {
   const now = new Date();
@@ -58,10 +76,18 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
+  // Apply catch criteria to mark apartments as catches client-side
+  const withCatchFlags = useMemo(() => {
+    return apartments.map((apt) => ({
+      ...apt,
+      isCatch: apt.isCatch || matchesCatchCriteria(apt, filters.catchCriteria),
+    }));
+  }, [apartments, filters.catchCriteria]);
+
   const filtered = useMemo(() => {
     const threshold = getTimeThreshold(filters.timeRange);
 
-    return apartments.filter((apt) => {
+    return withCatchFlags.filter((apt) => {
       // Time filter
       if (apt.timestamp && new Date(apt.timestamp) < threshold) return false;
 
@@ -93,7 +119,7 @@ export default function Home() {
 
       return true;
     });
-  }, [apartments, filters]);
+  }, [withCatchFlags, filters]);
 
   const catchCount = filtered.filter((a) => a.isCatch).length;
 

@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+
+export interface CatchCriteria {
+  maxPrice: number;
+  minRooms: number;
+  minSqm: number;
+  cities: string[];
+}
 
 export interface Filters {
   timeRange: string;
@@ -11,6 +18,7 @@ export interface Filters {
   rooms: number[];
   catchesOnly: boolean;
   cities: string[];
+  catchCriteria: CatchCriteria;
 }
 
 interface SidebarProps {
@@ -25,6 +33,29 @@ interface SidebarProps {
 const TIME_OPTIONS = ["24h", "3d", "7d", "30d", "All"];
 const ROOM_OPTIONS = [2, 2.5, 3, 3.5, 4];
 const CITY_OPTIONS = ["תל אביב", "רמת גן", "גבעתיים"];
+
+function Section({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="section">
+      <div className="section-header" onClick={() => setOpen(!open)}>
+        <span className="filter-label" style={{ marginBottom: 0 }}>
+          {title}
+        </span>
+        <span className="section-chevron">{open ? "▾" : "▸"}</span>
+      </div>
+      {open && <div className="section-body">{children}</div>}
+    </div>
+  );
+}
 
 export default function Sidebar({
   totalCount,
@@ -97,6 +128,26 @@ export default function Sidebar({
     [filters, onFiltersChange]
   );
 
+  const updateCatch = useCallback(
+    (partial: Partial<CatchCriteria>) => {
+      onFiltersChange({
+        ...filters,
+        catchCriteria: { ...filters.catchCriteria, ...partial },
+      });
+    },
+    [filters, onFiltersChange]
+  );
+
+  const toggleCatchCity = useCallback(
+    (city: string) => {
+      const cities = filters.catchCriteria.cities.includes(city)
+        ? filters.catchCriteria.cities.filter((c) => c !== city)
+        : [...filters.catchCriteria.cities, city];
+      updateCatch({ cities });
+    },
+    [filters.catchCriteria.cities, updateCatch]
+  );
+
   const timeAgo = lastUpdated
     ? `${Math.round((Date.now() - lastUpdated.getTime()) / 60000)} min ago`
     : "never";
@@ -120,8 +171,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div>
-        <div className="filter-label">Time Range</div>
+      <Section title="Time Range">
         <div className="btn-group">
           {TIME_OPTIONS.map((t) => (
             <button
@@ -133,10 +183,9 @@ export default function Sidebar({
             </button>
           ))}
         </div>
-      </div>
+      </Section>
 
-      <div>
-        <div className="filter-label">Price Range (₪)</div>
+      <Section title="Price Range (₪)">
         <div className="price-inputs">
           <input
             type="number"
@@ -154,10 +203,9 @@ export default function Sidebar({
             onChange={(e) => handleMaxPrice(e.target.value)}
           />
         </div>
-      </div>
+      </Section>
 
-      <div>
-        <div className="filter-label">Size (m²)</div>
+      <Section title="Size (m²)">
         <div className="price-inputs">
           <input
             type="number"
@@ -175,10 +223,9 @@ export default function Sidebar({
             onChange={(e) => handleMaxSqm(e.target.value)}
           />
         </div>
-      </div>
+      </Section>
 
-      <div>
-        <div className="filter-label">Rooms</div>
+      <Section title="Rooms">
         <div className="btn-group">
           {ROOM_OPTIONS.map((r) => (
             <button
@@ -190,7 +237,7 @@ export default function Sidebar({
             </button>
           ))}
         </div>
-      </div>
+      </Section>
 
       <div className="toggle-row">
         <span style={{ fontSize: 13 }}>🔥 Catches only</span>
@@ -202,8 +249,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div>
-        <div className="filter-label">Cities</div>
+      <Section title="Cities">
         <div className="checkbox-group">
           {CITY_OPTIONS.map((city) => (
             <label key={city}>
@@ -216,7 +262,60 @@ export default function Sidebar({
             </label>
           ))}
         </div>
-      </div>
+      </Section>
+
+      <Section title="🔥 Catch Criteria" defaultOpen={false}>
+        <div className="catch-config">
+          <div className="catch-row">
+            <span className="catch-label">Max Price (₪)</span>
+            <input
+              type="number"
+              className="price-box catch-input"
+              value={filters.catchCriteria.maxPrice || ""}
+              onChange={(e) =>
+                updateCatch({ maxPrice: parseInt(e.target.value) || 0 })
+              }
+            />
+          </div>
+          <div className="catch-row">
+            <span className="catch-label">Min Rooms</span>
+            <input
+              type="number"
+              className="price-box catch-input"
+              value={filters.catchCriteria.minRooms || ""}
+              onChange={(e) =>
+                updateCatch({ minRooms: parseFloat(e.target.value) || 0 })
+              }
+            />
+          </div>
+          <div className="catch-row">
+            <span className="catch-label">Min Size (m²)</span>
+            <input
+              type="number"
+              className="price-box catch-input"
+              value={filters.catchCriteria.minSqm || ""}
+              onChange={(e) =>
+                updateCatch({ minSqm: parseInt(e.target.value) || 0 })
+              }
+            />
+          </div>
+          <div style={{ marginTop: 6 }}>
+            <span className="catch-label">Cities</span>
+            <div className="checkbox-group" style={{ marginTop: 4 }}>
+              {CITY_OPTIONS.map((city) => (
+                <label key={city}>
+                  <input
+                    type="checkbox"
+                    checked={filters.catchCriteria.cities.includes(city)}
+                    onChange={() => toggleCatchCity(city)}
+                  />
+                  {city}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
 
       <div style={{ marginTop: "auto" }}>
         <button className="refresh-btn" onClick={onRefresh}>
