@@ -20,10 +20,10 @@ body {
 }
 
 .sidebar {
-  width: 260px;
-  min-width: 260px;
+  width: 300px;
+  min-width: 300px;
   background: #1a1a2e;
-  padding: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -280,7 +280,7 @@ body {
 .sidebar-toggle {
   position: absolute;
   top: 12px;
-  left: 260px;
+  left: 300px;
   z-index: 1001;
   width: 28px;
   height: 48px;
