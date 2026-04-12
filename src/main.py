@@ -132,6 +132,9 @@ def _process_yad2_listing(listing: dict, sheet: SheetClient, catch_config: dict 
         return False
 
     images = upload_images(listing.get("images") or [])
+    if not images:
+        logger.info("Yad2 skipped (no images): %s %s", listing.get("city", "?"), listing.get("street", "?"))
+        return False
     if not sheet.queue_listing(listing, listing["url"], images):
         return False
     _batch_counter += 1
@@ -206,6 +209,9 @@ def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
                 continue
 
             images = upload_images(post.get("images") or [])
+            if not images:
+                skipped += 1
+                continue
             if sheet.queue_listing(parsed, post["url"], images):
                 added += 1
                 _batch_counter += 1

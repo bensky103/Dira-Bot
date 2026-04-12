@@ -227,17 +227,27 @@ class Scraper:
 
                     // Extract post images (not profile pics / UI icons)
                     const images = [];
+                    const seen = new Set();
                     const imgElements = child.querySelectorAll('img');
                     for (const img of imgElements) {
+                        // Check multiple attributes — FB lazy-loads with data-src
                         const src = img.getAttribute('src') || '';
-                        // Facebook serves content images from scontent CDN
-                        if (!src.includes('scontent')) continue;
-                        const rect = img.getBoundingClientRect();
-                        // Skip tiny images (profile pics, icons, emoji)
-                        if (rect.width < 100 || rect.height < 100) continue;
+                        const dataSrc = img.getAttribute('data-src') || '';
+                        const dataSrcFallback = img.getAttribute('data-src-fallback') || '';
+                        const url = [src, dataSrc, dataSrcFallback]
+                            .find(s => s.includes('scontent'));
+                        if (!url) continue;
+                        // Dedupe (same image can appear in multiple attributes)
+                        if (seen.has(url)) continue;
+                        seen.add(url);
                         // Skip images in the comment section
+                        const rect = img.getBoundingClientRect();
                         if (rect.top >= cutoffY) continue;
-                        images.push(src);
+                        // Skip tiny images only if they have rendered dimensions
+                        // (lazy-loaded images may be 0x0 but still valid)
+                        if (rect.width > 0 && rect.height > 0 &&
+                            rect.width < 50 && rect.height < 50) continue;
+                        images.push(url);
                     }
 
                     results.push({
