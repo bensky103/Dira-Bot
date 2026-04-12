@@ -6,8 +6,9 @@ import random
 import time
 from logging.handlers import RotatingFileHandler
 
-from src.config import GROUPS, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, DATA_DIR
+from src.config import GROUPS, YAD2_CITIES, CYCLE_INTERVAL_SECONDS, GROUP_JITTER_BASE, GROUP_JITTER_RANGE, DATA_DIR
 from src.scraper import Scraper
+from src.yad2_scraper import Yad2Scraper
 from src.parser import parse_post
 from src.sheets import SheetClient
 from src.notifier import send_catch_alert, send_session_expired_alert, send_batch_alert
@@ -107,13 +108,39 @@ def _cleanup_screenshots():
             pass
 
 
-def run_cycle(scraper: Scraper, sheet: SheetClient):
-    """Run one full scrape-parse-store cycle across all groups."""
+def _process_yad2_listing(listing: dict, sheet: SheetClient, catch_config: dict | None) -> bool:
+    """Process a single pre-parsed Yad2 listing. Returns True if added."""
+    global _batch_counter
+
+    reason = check_listing_valid(listing)
+    if reason:
+        logger.info("Yad2 skipped invalid: %s (%s)", listing.get("city", "?"), reason)
+        return False
+
+    if sheet.is_duplicate_listing(listing):
+        logger.info(
+            "Yad2 duplicate skipped: %s %s %s NIS",
+            listing.get("city", "?"), listing.get("street", "?"), listing.get("price_nis", "?"),
+        )
+        return False
+
+    sheet.append_listing(listing, listing["url"], listing.get("images"))
+    _batch_counter += 1
+
+    if check_catch_filters(listing, catch_config):
+        send_catch_alert(listing, listing["url"])
+
+    return True
+
+
+def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
+    """Run one full scrape-parse-store cycle across all sources."""
     global _session_alert_sent, _batch_counter
     _cleanup_screenshots()
     sheet.cleanup_stale_rows()
     catch_config = sheet.load_catch_config()
 
+    # ── Facebook Groups ──
     for i, group_url in enumerate(GROUPS):
         logger.info("Scraping group %d/%d: %s", i + 1, len(GROUPS), group_url)
         posts = scraper.scrape_group(group_url)
@@ -124,7 +151,7 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
                 logger.warning("First group returned 0 posts — session likely expired!")
                 send_session_expired_alert()
                 _session_alert_sent = True
-            return
+            break
         elif len(posts) > 0:
             _session_alert_sent = False
 
@@ -162,14 +189,13 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
                 duplicates += 1
                 continue
 
-            sheet.append_listing(parsed, post["url"])
+            sheet.append_listing(parsed, post["url"], post.get("images"))
             added += 1
             _batch_counter += 1
 
             if parsed.get("is_catch") and check_catch_filters(parsed, catch_config):
                 send_catch_alert(parsed, post["url"])
 
-        # Send batch alert every 5 new listings
         if _batch_counter >= BATCH_ALERT_THRESHOLD:
             send_batch_alert(_batch_counter)
             _batch_counter = 0
@@ -188,16 +214,48 @@ def run_cycle(scraper: Scraper, sheet: SheetClient):
             logger.info("Waiting %d seconds before next group...", wait)
             time.sleep(wait)
 
+    # ── Yad2 ──
+    logger.info("Scraping Yad2...")
+    for city in YAD2_CITIES:
+        try:
+            listings = yad2.scrape_city(city)
+            new_listings = [
+                l for l in listings
+                if l["url"] not in _seen_urls and not sheet.link_exists(l["url"])
+            ]
+            logger.info("Yad2 %s: %d listings (%d new)", city, len(listings), len(new_listings))
+
+            added = 0
+            for listing in new_listings:
+                _seen_urls.add(listing["url"])
+                if _process_yad2_listing(listing, sheet, catch_config):
+                    added += 1
+
+            if _batch_counter >= BATCH_ALERT_THRESHOLD:
+                send_batch_alert(_batch_counter)
+                _batch_counter = 0
+
+            logger.info("Yad2 %s: %d added", city, added)
+            _save_seen(_seen_urls)
+
+        except Exception as e:
+            logger.error("Yad2 %s failed: %s", city, e)
+
+        # Jitter between cities
+        time.sleep(random.randint(5, 15))
+
 
 def main():
     logger.info("Starting Dira-Bot")
     scraper = Scraper()
     scraper.start()
+    yad2 = Yad2Scraper()
+    yad2.start(scraper.playwright)
     sheet = SheetClient()
 
     try:
         while True:
-            run_cycle(scraper, sheet)
+            run_cycle(scraper, yad2, sheet)
             logger.info(
                 "Cycle complete. Sleeping %d minutes...",
                 CYCLE_INTERVAL_SECONDS // 60,
@@ -208,6 +266,7 @@ def main():
     finally:
         logger.info("Shutting down...")
         scraper.close()
+        yad2.close()
         logging.shutdown()
 
 

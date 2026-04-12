@@ -82,7 +82,7 @@ class SheetClient:
     def link_exists(self, link: str) -> bool:
         return link in self._known_links
 
-    def append_listing(self, parsed: dict, link: str):
+    def append_listing(self, parsed: dict, link: str, images: list[str] | None = None):
         if self.link_exists(link):
             logger.info("Duplicate skipped: %s", link)
             return
@@ -98,6 +98,7 @@ class SheetClient:
             parsed.get("phone", ""),
             link,
             str(parsed.get("is_catch", False)),
+            "|".join(images) if images else "",
         ]
         self._sheet.append_row(row, value_input_option="USER_ENTERED")
         self._known_links.add(link)

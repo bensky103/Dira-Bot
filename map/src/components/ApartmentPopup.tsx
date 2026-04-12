@@ -1,12 +1,62 @@
+import { useState } from "react";
 import type { Apartment } from "@/types/apartment";
 
 interface ApartmentPopupProps {
   apartment: Apartment;
 }
 
+function ImageCarousel({ images }: { images: string[] }) {
+  const [index, setIndex] = useState(0);
+
+  return (
+    <div className="popup-carousel">
+      <div
+        className="carousel-track"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {images.map((src, i) => (
+          <img key={i} src={src} alt={`Photo ${i + 1}`} className="carousel-img" />
+        ))}
+      </div>
+      {images.length > 1 && (
+        <>
+          {index > 0 && (
+            <button
+              className="carousel-btn carousel-prev"
+              onClick={() => setIndex(index - 1)}
+            >
+              ‹
+            </button>
+          )}
+          {index < images.length - 1 && (
+            <button
+              className="carousel-btn carousel-next"
+              onClick={() => setIndex(index + 1)}
+            >
+              ›
+            </button>
+          )}
+          <div className="carousel-dots">
+            {images.map((_, i) => (
+              <span
+                key={i}
+                className={`carousel-dot ${i === index ? "active" : ""}`}
+                onClick={() => setIndex(i)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ApartmentPopup({ apartment }: ApartmentPopupProps) {
   return (
     <div className="popup-card">
+      {apartment.images.length > 0 && (
+        <ImageCarousel images={apartment.images} />
+      )}
       <div className="popup-header">
         <span className="area-name">{apartment.area}</span>
         {apartment.isCatch && <span className="catch-badge">🔥 CATCH</span>}

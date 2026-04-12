@@ -48,7 +48,27 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('src/parser.py'\\).read\\(\\)\\); print\\('parser.py: syntax OK'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('src/parser.py', encoding='utf-8'\\).read\\(\\)\\); print\\('parser.py: syntax OK'\\)\")",
       "Bash(npx next:*)",
-      "Bash(powershell -Command 'Get-Process -Name '\\\\''Code'\\\\'' | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Id, MainWindowTitle, MainWindowHandle | Format-Table')"
+      "Bash(powershell -Command 'Get-Process -Name '\\\\''Code'\\\\'' | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Id, MainWindowTitle, MainWindowHandle | Format-Table')",
+      "Bash(node_modules/.bin/next build:*)",
+      "Bash(npx --no-install next build)",
+      "Bash(npx --no-install tsc --noEmit)",
+      "Bash(ls node_modules/.bin/tsc*)",
+      "Bash(npm ls:*)",
+      "Bash(grep -E \"\\\\.\\(py|txt|md|json|env\\)$\")",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/main.py'\\).read\\(\\)\\); print\\('main.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/yad2_scraper.py'\\).read\\(\\)\\); print\\('yad2_scraper.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/config.py'\\).read\\(\\)\\); print\\('config.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/sheets.py'\\).read\\(\\)\\); print\\('sheets.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/yad2_scraper.py', encoding='utf-8'\\).read\\(\\)\\); print\\('yad2_scraper.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/config.py', encoding='utf-8'\\).read\\(\\)\\); print\\('config.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/sheets.py', encoding='utf-8'\\).read\\(\\)\\); print\\('sheets.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/main.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/yad2_scraper.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/scraper.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('src/scraper.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")"
     ]
   }
 }

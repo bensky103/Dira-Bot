@@ -172,7 +172,8 @@ export default function Home() {
         onClick={() => setSidebarOpen(!sidebarOpen)}
         title={sidebarOpen ? "Hide filters" : "Show filters"}
       >
-        {sidebarOpen ? "◀" : "▶"}
+        <span className="toggle-desktop">{sidebarOpen ? "◀" : "▶"}</span>
+        <span className="toggle-mobile">{sidebarOpen ? "▼" : "▲"}</span>
       </button>
       {loading && apartments.length === 0 ? (
         <div

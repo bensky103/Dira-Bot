@@ -19,6 +19,10 @@ class Scraper:
         self._browser: Browser | None = None
         self._context: BrowserContext | None = None
 
+    @property
+    def playwright(self):
+        return self._playwright
+
     def start(self):
         self._playwright = sync_playwright().start()
 
@@ -250,9 +254,25 @@ class Scraper:
                         postUrl = '__no_link__' + Math.abs(hash).toString(36);
                     }
 
+                    // Extract post images (not profile pics / UI icons)
+                    const images = [];
+                    const imgElements = child.querySelectorAll('img');
+                    for (const img of imgElements) {
+                        const src = img.getAttribute('src') || '';
+                        // Facebook serves content images from scontent CDN
+                        if (!src.includes('scontent')) continue;
+                        const rect = img.getBoundingClientRect();
+                        // Skip tiny images (profile pics, icons, emoji)
+                        if (rect.width < 100 || rect.height < 100) continue;
+                        // Skip images in the comment section
+                        if (rect.top >= cutoffY) continue;
+                        images.push(src);
+                    }
+
                     results.push({
                         text: postText,
-                        url: postUrl
+                        url: postUrl,
+                        images: images
                     });
                 }
                 return results;

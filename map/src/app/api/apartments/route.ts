@@ -65,6 +65,7 @@ async function loadApartments(): Promise<Apartment[]> {
         isCatch: row.isCatch === "True" || row.isCatch === "true",
         lat: coords.lat,
         lng: coords.lng,
+        images: row.images ? row.images.split("|").filter(Boolean) : [],
       };
     })
   );

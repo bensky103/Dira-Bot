@@ -11,4 +11,5 @@ export interface Apartment {
   isCatch: boolean;
   lat: number;
   lng: number;
+  images: string[];
 }

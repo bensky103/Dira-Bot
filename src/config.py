@@ -56,6 +56,9 @@ GROUPS = [
     "https://www.facebook.com/groups/196649476429218/",
 ]
 
+# ── Yad2 Cities ──
+YAD2_CITIES = ["תל אביב", "רמת גן", "גבעתיים"]
+
 # ── Scraping Intervals ──
 CYCLE_INTERVAL_SECONDS = 20 * 60
 GROUP_JITTER_BASE = 180  # seconds between groups
@@ -63,5 +66,5 @@ GROUP_JITTER_RANGE = 60  # +/- seconds
 
 # ── Sheet Schema ──
 SHEET_HEADERS = [
-    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch"
+    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch", "Images"
 ]
