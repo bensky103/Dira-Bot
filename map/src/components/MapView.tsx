@@ -57,7 +57,7 @@ export default function MapView({ apartments }: MapViewProps) {
           position={[apt.lat, apt.lng]}
           icon={apt.isCatch ? catchIcon : defaultIcon}
         >
-          <Popup>
+          <Popup minWidth={260} maxWidth={300}>
             <ApartmentPopup apartment={apt} />
           </Popup>
         </Marker>

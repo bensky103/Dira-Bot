@@ -327,7 +327,7 @@ body {
 
 .leaflet-popup-content {
   margin: 0 !important;
-  min-width: 220px;
+  width: 260px !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   line-height: 1.5;
