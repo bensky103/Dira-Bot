@@ -23,8 +23,10 @@ const MapView = dynamic(() => import("./MapView"), {
 
 export default function MapViewDynamic({
   apartments,
+  onDelete,
 }: {
   apartments: Apartment[];
+  onDelete?: (link: string) => void;
 }) {
-  return <MapView apartments={apartments} />;
+  return <MapView apartments={apartments} onDelete={onDelete} />;
 }

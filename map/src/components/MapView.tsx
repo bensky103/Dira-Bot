@@ -62,9 +62,10 @@ const catchIcon = L.icon({
 
 interface MapViewProps {
   apartments: Apartment[];
+  onDelete?: (link: string) => void;
 }
 
-export default function MapView({ apartments }: MapViewProps) {
+export default function MapView({ apartments, onDelete }: MapViewProps) {
   return (
     <MapContainer
       center={[32.07, 34.79]}
@@ -84,7 +85,7 @@ export default function MapView({ apartments }: MapViewProps) {
           icon={apt.isCatch ? catchIcon : defaultIcon}
         >
           <PopupAutoSize>
-            <ApartmentPopup apartment={apt} />
+            <ApartmentPopup apartment={apt} onDelete={onDelete} />
           </PopupAutoSize>
         </Marker>
       ))}

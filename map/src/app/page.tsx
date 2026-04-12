@@ -153,6 +153,20 @@ export default function Home() {
 
   const catchCount = filtered.filter((a) => a.isCatch).length;
 
+  const handleDelete = useCallback(async (link: string) => {
+    try {
+      const res = await fetch("/api/apartments/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setApartments((prev) => prev.filter((apt) => apt.link !== link));
+    } catch (err) {
+      console.error("Failed to delete apartment:", err);
+    }
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -190,7 +204,7 @@ export default function Home() {
           Loading apartments...
         </div>
       ) : (
-        <MapViewDynamic apartments={filtered} />
+        <MapViewDynamic apartments={filtered} onDelete={handleDelete} />
       )}
     </div>
   );

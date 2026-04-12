@@ -3,6 +3,7 @@ import type { Apartment } from "@/types/apartment";
 
 interface ApartmentPopupProps {
   apartment: Apartment;
+  onDelete?: (link: string) => void;
 }
 
 function ImageCarousel({ images }: { images: string[] }) {
@@ -51,7 +52,19 @@ function ImageCarousel({ images }: { images: string[] }) {
   );
 }
 
-export default function ApartmentPopup({ apartment }: ApartmentPopupProps) {
+export default function ApartmentPopup({ apartment, onDelete }: ApartmentPopupProps) {
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setDeleting(true);
+    onDelete?.(apartment.link);
+  };
+
   return (
     <div className="popup-card">
       {apartment.images.length > 0 && (
@@ -90,6 +103,15 @@ export default function ApartmentPopup({ apartment }: ApartmentPopupProps) {
       >
         View Post →
       </a>
+      {onDelete && (
+        <button
+          className={`popup-delete ${confirmDelete ? "confirm" : ""}`}
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? "Deleting..." : confirmDelete ? "Click again to confirm" : "Delete"}
+        </button>
+      )}
     </div>
   );
 }

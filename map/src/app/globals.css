@@ -536,6 +536,38 @@ body {
   color: #fff !important;
 }
 
+.popup-delete {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.popup-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.popup-delete.confirm {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.popup-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .area-circle {
   display: flex;
   align-items: center;
