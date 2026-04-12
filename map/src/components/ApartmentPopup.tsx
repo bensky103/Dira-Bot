@@ -21,28 +21,24 @@ function ImageCarousel({ images }: { images: string[] }) {
       </div>
       {images.length > 1 && (
         <>
-          {index > 0 && (
-            <button
-              className="carousel-btn carousel-prev"
-              onClick={() => setIndex(index - 1)}
-            >
-              ‹
-            </button>
-          )}
-          {index < images.length - 1 && (
-            <button
-              className="carousel-btn carousel-next"
-              onClick={() => setIndex(index + 1)}
-            >
-              ›
-            </button>
-          )}
+          <button
+            className="carousel-btn carousel-prev"
+            onClick={(e) => { e.stopPropagation(); setIndex((index - 1 + images.length) % images.length); }}
+          >
+            ‹
+          </button>
+          <button
+            className="carousel-btn carousel-next"
+            onClick={(e) => { e.stopPropagation(); setIndex((index + 1) % images.length); }}
+          >
+            ›
+          </button>
           <div className="carousel-dots">
             {images.map((_, i) => (
               <span
                 key={i}
                 className={`carousel-dot ${i === index ? "active" : ""}`}
-                onClick={() => setIndex(i)}
+                onClick={(e) => { e.stopPropagation(); setIndex(i); }}
               />
             ))}
           </div>
