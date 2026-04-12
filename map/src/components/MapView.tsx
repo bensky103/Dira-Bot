@@ -5,11 +5,37 @@ import {
   TileLayer,
   Marker,
   Popup,
+  useMap,
 } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Apartment } from "@/types/apartment";
 import ApartmentPopup from "./ApartmentPopup";
+
+function PopupAutoSize({ children }: { children: React.ReactNode }) {
+  const map = useMap();
+  const popupRef = useRef<L.Popup | null>(null);
+
+  useEffect(() => {
+    // After React renders content, tell Leaflet to recalculate size
+    const onOpen = () => {
+      setTimeout(() => {
+        if (popupRef.current) {
+          popupRef.current.update();
+        }
+      }, 0);
+    };
+    map.on("popupopen", onOpen);
+    return () => { map.off("popupopen", onOpen); };
+  }, [map]);
+
+  return (
+    <Popup ref={popupRef} minWidth={260} maxWidth={300}>
+      {children}
+    </Popup>
+  );
+}
 
 const defaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -57,9 +83,9 @@ export default function MapView({ apartments }: MapViewProps) {
           position={[apt.lat, apt.lng]}
           icon={apt.isCatch ? catchIcon : defaultIcon}
         >
-          <Popup minWidth={260} maxWidth={300}>
+          <PopupAutoSize>
             <ApartmentPopup apartment={apt} />
-          </Popup>
+          </PopupAutoSize>
         </Marker>
       ))}
     </MapContainer>
