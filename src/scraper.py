@@ -200,19 +200,7 @@ class Scraper:
                         }
                     }
 
-                    // 2. Extract post ID from photo links (set=pcb.POSTID)
-                    if (!postUrl && groupSlug) {
-                        for (const href of allHrefs) {
-                            const pcbMatch = href.match(/set=pcb\\.([0-9]+)/);
-                            if (pcbMatch) {
-                                postUrl = 'https://www.facebook.com/groups/' +
-                                          groupSlug + '/posts/' + pcbMatch[1];
-                                break;
-                            }
-                        }
-                    }
-
-                    // 3. Any link with a numeric post/listing ID
+                    // 2. Any link with a numeric post/listing ID
                     if (!postUrl) {
                         for (const href of allHrefs) {
                             if (/groups\\/[^/]+\\/posts\\/[0-9]+/.test(href) ||
@@ -224,24 +212,7 @@ class Scraper:
                         }
                     }
 
-                    // 4. Search the raw HTML for embedded post IDs
-                    //    Facebook embeds post IDs in data attributes & encoded
-                    //    JSON even when no visible permalink link exists
-                    //    (e.g. text-only posts with no photos).
-                    if (!postUrl && groupSlug) {
-                        const html = child.innerHTML;
-                        const idMatch =
-                            html.match(/story_fbid[=:]([0-9]{10,})/) ||
-                            html.match(/"post_id":"([0-9]{10,})"/) ||
-                            html.match(/"top_level_post_id":"([0-9]{10,})"/) ||
-                            html.match(/"content_id":"([0-9]{10,})"/);
-                        if (idMatch) {
-                            postUrl = 'https://www.facebook.com/groups/' +
-                                      groupSlug + '/posts/' + idMatch[1];
-                        }
-                    }
-
-                    // 5. Last resort: hash the post text for a unique ID.
+                    // 3. Last resort: hash the post text for a unique ID.
                     //    This prevents using the bare group URL (which breaks
                     //    deduplication — every linkless post would share the
                     //    same "URL" and only the first would ever be stored).

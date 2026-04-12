@@ -33,6 +33,8 @@ class SheetClient:
         ))
         # Cache composite keys (street, price, rooms, sqm) for cross-group dedup
         self._known_composites: set[tuple] = self._load_composite_keys()
+        # Batch append buffer
+        self._pending_rows: list[list] = []
 
     def _ensure_headers(self):
         first_row = self._sheet.row_values(1)
@@ -82,12 +84,9 @@ class SheetClient:
     def link_exists(self, link: str) -> bool:
         return link in self._known_links
 
-    def append_listing(self, parsed: dict, link: str, images: list[str] | None = None):
-        if self.link_exists(link):
-            logger.info("Duplicate skipped: %s", link)
-            return
-
-        row = [
+    def _build_row(self, parsed: dict, link: str, images: list[str] | None = None) -> list:
+        """Build a sheet row from parsed data."""
+        return [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             parsed.get("city", ""),
             parsed.get("area", ""),
@@ -100,9 +99,10 @@ class SheetClient:
             str(parsed.get("is_catch", False)),
             "|".join(images) if images else "",
         ]
-        self._sheet.append_row(row, value_input_option="USER_ENTERED")
+
+    def _track_listing(self, parsed: dict, link: str):
+        """Update in-memory caches after adding a listing."""
         self._known_links.add(link)
-        # Track composite key for cross-group dedup
         key = self._make_composite_key(
             parsed.get("street", ""),
             parsed.get("price_nis", ""),
@@ -111,10 +111,43 @@ class SheetClient:
         )
         if key:
             self._known_composites.add(key)
+
+    def append_listing(self, parsed: dict, link: str, images: list[str] | None = None):
+        if self.link_exists(link):
+            logger.info("Duplicate skipped: %s", link)
+            return
+
+        row = self._build_row(parsed, link, images)
+        self._sheet.append_row(row, value_input_option="USER_ENTERED")
+        self._track_listing(parsed, link)
         logger.info("Row added: %s – %s", parsed.get("city"), link)
 
-    def cleanup_stale_rows(self):
-        """Delete rows older than STALE_DAYS and rebuild in-memory caches."""
+    def queue_listing(self, parsed: dict, link: str, images: list[str] | None = None):
+        """Queue a listing for batch append. Updates caches immediately for dedup."""
+        if self.link_exists(link):
+            logger.info("Duplicate skipped: %s", link)
+            return False
+
+        row = self._build_row(parsed, link, images)
+        self._pending_rows.append(row)
+        self._track_listing(parsed, link)
+        return True
+
+    def flush_pending(self):
+        """Append all queued rows to the sheet in a single API call."""
+        if not self._pending_rows:
+            return 0
+        count = len(self._pending_rows)
+        self._sheet.append_rows(self._pending_rows, value_input_option="USER_ENTERED")
+        logger.info("Batch appended %d rows", count)
+        self._pending_rows.clear()
+        return count
+
+    def cleanup_stale_rows(self) -> set[str]:
+        """Delete rows older than STALE_DAYS and rebuild in-memory caches.
+
+        Returns the set of links that remain in the sheet (for seen_urls sync).
+        """
         cutoff = datetime.now() - timedelta(days=STALE_DAYS)
         all_rows = self._sheet.get_all_values()
 
@@ -130,7 +163,7 @@ class SheetClient:
 
         if not stale_indices:
             logger.info("No stale rows to clean up")
-            return
+            return self._known_links.copy()
 
         # Delete from bottom to top so indices don't shift
         for idx in reversed(stale_indices):
@@ -143,6 +176,7 @@ class SheetClient:
             SHEET_HEADERS.index("Link") + 1
         ))
         self._known_composites = self._load_composite_keys()
+        return self._known_links.copy()
 
     def load_catch_config(self) -> dict | None:
         """Read catch criteria from the Config sheet tab (written by the map UI)."""
