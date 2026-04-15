@@ -27,7 +27,7 @@ TOP_AREA_NAMES = {
     8: "רמת אביב",
 }
 
-API_URL = "https://gw.yad2.co.il/feed-search-legacy/realestate/rent"
+API_URL = "https://www.yad2.co.il/api/pre-load/getFeedIndex/realestate/rent"
 
 
 class Yad2Scraper:
@@ -86,7 +86,7 @@ class Yad2Scraper:
                 logger.info("Yad2 API: got %d listings from %s page %d", len(parsed), city, page_num)
 
                 # Check if there are more pages
-                total_pages = data.get("data", {}).get("pagination", {}).get("last_page", 1)
+                total_pages = data.get("pagination", {}).get("last_page", 1)
                 if page_num >= total_pages:
                     break
 
@@ -104,78 +104,47 @@ class Yad2Scraper:
 
     def _extract_feed_items(self, data: dict) -> list[dict]:
         """Extract listing items from the API response JSON."""
-        feed = data.get("data", {}).get("feed", {}).get("feed_items", [])
+        feed = data.get("feed", {}).get("feed_items", [])
         return [
             item for item in feed
             if isinstance(item, dict)
-            and item.get("type") in ("ad", "item", None)
-            and (item.get("id") or item.get("token") or item.get("link_token"))
+            and item.get("type") == "ad"
+            and (item.get("id") or item.get("link_token"))
         ]
 
     def _parse_item(self, item: dict, city: str) -> dict | None:
         """Parse a single API item into our standard listing format."""
         try:
-            item_id = item.get("id") or item.get("token") or item.get("link_token")
+            item_id = item.get("id") or item.get("link_token")
             if not item_id:
                 return None
 
-            # Price
+            # Price — comes as string like "27,000 ₪"
             price_raw = item.get("price", "")
             price = self._parse_number(str(price_raw))
             if not price:
                 return None
 
-            # Rooms
-            rooms_raw = item.get("rooms")
-            if not rooms_raw and isinstance(item.get("row_1"), list):
-                for col in item["row_1"]:
-                    if isinstance(col, dict) and col.get("key") == "rooms":
-                        rooms_raw = col.get("value")
-                        break
-            rooms = self._parse_float(str(rooms_raw)) if rooms_raw else 0
+            # Rooms — capital R, already a float (e.g. 3.5)
+            rooms = self._parse_float(str(item.get("Rooms", 0)))
 
-            # Square meters
-            sqm_raw = item.get("square_meters") or item.get("squareMeter")
-            if not sqm_raw and isinstance(item.get("row_1"), list):
-                for col in item["row_1"]:
-                    if isinstance(col, dict) and col.get("key") == "square_meters":
-                        sqm_raw = col.get("value")
-                        break
-            sqm = self._parse_number(str(sqm_raw)) if sqm_raw else 0
+            # Square meters — already an int
+            sqm = self._parse_number(str(item.get("square_meters", 0)))
 
-            # Address
-            addr = item.get("address", {})
-            if isinstance(addr, dict):
-                street_obj = addr.get("street", {})
-                street_name = street_obj.get("name", "") if isinstance(street_obj, dict) else str(street_obj)
-                house_obj = addr.get("house", {})
-                house_str = house_obj.get("number", "") if isinstance(house_obj, dict) else str(house_obj or "")
-                neighborhood = addr.get("neighborhood", {})
-                area = neighborhood.get("name", "") if isinstance(neighborhood, dict) else str(neighborhood or "")
-                full_street = f"{street_name} {house_str}".strip()
-            elif isinstance(addr, str):
-                full_street = addr
-                area = ""
-            else:
-                full_street = ""
-                area = ""
+            # Address — flat fields (not nested)
+            street_name = item.get("street") or ""
+            house_num = item.get("address_home_number") or ""
+            full_street = f"{street_name} {house_num}".strip()
 
+            # Area/neighborhood
+            area = item.get("neighborhood") or ""
             if not area:
                 area = TOP_AREA_NAMES.get(item.get("top_area_id"), "")
 
-            # Images
-            images = []
-            img_data = item.get("images") or item.get("media", {}).get("images", [])
-            if isinstance(img_data, list):
-                for img in img_data:
-                    if isinstance(img, dict):
-                        src = img.get("src") or img.get("url") or img.get("image_url", "")
-                    elif isinstance(img, str):
-                        src = img
-                    else:
-                        continue
-                    if src:
-                        images.append(src)
+            # Images — images_urls is a list of URL strings
+            images = item.get("images_urls") or []
+            if not isinstance(images, list):
+                images = []
 
             listing_url = f"https://www.yad2.co.il/realestate/item/{item_id}"
             phone = item.get("phone", "") or ""
