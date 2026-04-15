@@ -63,5 +63,5 @@ GROUP_JITTER_RANGE = 60  # +/- seconds
 
 # ── Sheet Schema ──
 SHEET_HEADERS = [
-    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch", "Images"
+    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch", "Images", "Favorite"
 ]

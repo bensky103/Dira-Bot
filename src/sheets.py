@@ -27,6 +27,7 @@ class SheetClient:
         self._workbook = gc.open(GOOGLE_SHEET_NAME)
         self._sheet = self._workbook.sheet1
         self._ensure_headers()
+        self._backfill_favorites()
         # Cache links in memory to avoid repeated API calls
         self._known_links: set[str] = set(self._sheet.col_values(
             SHEET_HEADERS.index("Link") + 1
@@ -40,6 +41,18 @@ class SheetClient:
         first_row = self._sheet.row_values(1)
         if first_row != SHEET_HEADERS:
             self._sheet.update("A1", [SHEET_HEADERS])
+
+    def _backfill_favorites(self):
+        """Fill empty Favorite column cells with 'False' for existing rows."""
+        fav_col = SHEET_HEADERS.index("Favorite") + 1  # 1-indexed for gspread
+        all_rows = self._sheet.get_all_values()
+        updates = []
+        for i, row in enumerate(all_rows[1:], start=2):  # skip header
+            if len(row) < fav_col or not row[fav_col - 1].strip():
+                updates.append({"range": f"{chr(64 + fav_col)}{i}", "values": [["False"]]})
+        if updates:
+            self._sheet.batch_update(updates)
+            logger.info("Backfilled %d rows with Favorite=False", len(updates))
 
     def _load_composite_keys(self) -> set[tuple]:
         """Load composite keys from existing sheet rows for cross-group dedup."""
@@ -98,6 +111,7 @@ class SheetClient:
             link,
             str(parsed.get("is_catch", False)),
             "|".join(images) if images else "",
+            "False",
         ]
 
     def _track_listing(self, parsed: dict, link: str):
@@ -153,8 +167,12 @@ class SheetClient:
 
         # Find row indices to delete (1-indexed, skip header)
         stale_indices = []
+        fav_col = SHEET_HEADERS.index("Favorite")
         for i, row in enumerate(all_rows[1:], start=2):
             try:
+                # Skip favorited rows — they are immune to cleanup
+                if len(row) > fav_col and row[fav_col].strip().lower() == "true":
+                    continue
                 ts = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
                 if ts < cutoff:
                     stale_indices.append(i)
