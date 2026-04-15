@@ -9,6 +9,7 @@ export interface Apartment {
   phone: string;
   link: string;
   isCatch: boolean;
+  isFavorite: boolean;
   lat: number;
   lng: number;
   images: string[];

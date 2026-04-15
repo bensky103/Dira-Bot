@@ -13,6 +13,7 @@ interface SheetRow {
   link: string;
   isCatch: string;
   images: string;
+  favorite: string;
 }
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
@@ -133,5 +134,6 @@ export async function fetchApartments(): Promise<SheetRow[]> {
     link: row.get("Link") || "",
     isCatch: row.get("Is Catch") || "",
     images: row.get("Images") || "",
+    favorite: row.get("Favorite") || "False",
   }));
 }
