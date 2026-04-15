@@ -651,6 +651,7 @@ body {
   }
 
   .sidebar-toggle {
+    position: fixed;
     top: unset;
     left: 50%;
     transform: translateX(-50%);
