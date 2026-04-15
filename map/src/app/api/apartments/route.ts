@@ -40,6 +40,28 @@ async function resolveCoordinates(
   return { lat: 32.075, lng: 34.78, verifiedCity: null };
 }
 
+function spreadOverlappingPins(apartments: Apartment[]): void {
+  // Group by rounded coordinates (5 decimal places ≈ ~1m precision)
+  const groups = new Map<string, number[]>();
+  for (let i = 0; i < apartments.length; i++) {
+    const key = `${apartments[i].lat.toFixed(5)},${apartments[i].lng.toFixed(5)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(i);
+  }
+
+  // Offset overlapping pins in a circle pattern
+  const OFFSET = 0.0002; // ~20m at Tel Aviv latitude
+  for (const indices of groups.values()) {
+    if (indices.length <= 1) continue;
+    const count = indices.length;
+    for (let j = 0; j < count; j++) {
+      const angle = (2 * Math.PI * j) / count;
+      apartments[indices[j]].lat += OFFSET * Math.cos(angle);
+      apartments[indices[j]].lng += OFFSET * Math.sin(angle);
+    }
+  }
+}
+
 async function loadApartments(): Promise<Apartment[]> {
   const rows = await fetchApartments();
 
@@ -70,6 +92,8 @@ async function loadApartments(): Promise<Apartment[]> {
       };
     })
   );
+
+  spreadOverlappingPins(apartments);
 
   return apartments.filter((a) => a.price > 0 && a.lat !== 0);
 }
