@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import threading
 import time
 from logging.handlers import RotatingFileHandler
 
@@ -145,6 +146,19 @@ def _process_yad2_listing(listing: dict, sheet: SheetClient, catch_config: dict 
     return True
 
 
+def _scrape_yad2_cities(yad2: Yad2Scraper) -> dict[str, list[dict]]:
+    """Scrape all Yad2 cities. Runs in a background thread."""
+    results = {}
+    for city in YAD2_CITIES:
+        try:
+            results[city] = yad2.scrape_city(city)
+        except Exception as e:
+            logger.error("Yad2 %s failed: %s", city, e)
+            results[city] = []
+        time.sleep(random.randint(5, 15))
+    return results
+
+
 def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
     """Run one full scrape-parse-store cycle across all sources."""
     global _session_alert_sent, _batch_counter
@@ -158,6 +172,17 @@ def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
         logger.info("Pruned %d stale entries from seen_urls (%d remaining)", pruned, len(_seen_urls))
         _save_seen(_seen_urls)
     catch_config = sheet.load_catch_config()
+
+    # ── Start Yad2 in background thread ──
+    yad2_results: dict[str, list[dict]] = {}
+
+    def yad2_worker():
+        nonlocal yad2_results
+        yad2_results = _scrape_yad2_cities(yad2)
+
+    yad2_thread = threading.Thread(target=yad2_worker, name="yad2-scraper")
+    yad2_thread.start()
+    logger.info("Yad2 scraping started in background thread")
 
     # ── Facebook Groups ──
     for i, group_url in enumerate(GROUPS):
@@ -240,37 +265,31 @@ def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
             logger.info("Waiting %d seconds before next group...", wait)
             time.sleep(wait)
 
-    # ── Yad2 ──
-    logger.info("Scraping Yad2...")
-    for city in YAD2_CITIES:
-        try:
-            listings = yad2.scrape_city(city)
-            new_listings = [
-                l for l in listings
-                if l["url"] not in _seen_urls and not sheet.link_exists(l["url"])
-            ]
-            logger.info("Yad2 %s: %d listings (%d new)", city, len(listings), len(new_listings))
+    # ── Wait for Yad2 thread and process results ──
+    yad2_thread.join()
+    logger.info("Yad2 scraping complete, processing results...")
 
-            added = 0
-            for listing in new_listings:
-                _seen_urls.add(listing["url"])
-                if _process_yad2_listing(listing, sheet, catch_config):
-                    added += 1
+    for city, listings in yad2_results.items():
+        new_listings = [
+            l for l in listings
+            if l["url"] not in _seen_urls and not sheet.link_exists(l["url"])
+        ]
+        logger.info("Yad2 %s: %d listings (%d new)", city, len(listings), len(new_listings))
 
-            sheet.flush_pending()
+        added = 0
+        for listing in new_listings:
+            _seen_urls.add(listing["url"])
+            if _process_yad2_listing(listing, sheet, catch_config):
+                added += 1
 
-            if _batch_counter >= BATCH_ALERT_THRESHOLD:
-                send_batch_alert(_batch_counter)
-                _batch_counter = 0
+        sheet.flush_pending()
 
-            logger.info("Yad2 %s: %d added", city, added)
-            _save_seen(_seen_urls)
+        if _batch_counter >= BATCH_ALERT_THRESHOLD:
+            send_batch_alert(_batch_counter)
+            _batch_counter = 0
 
-        except Exception as e:
-            logger.error("Yad2 %s failed: %s", city, e)
-
-        # Jitter between cities
-        time.sleep(random.randint(5, 15))
+        logger.info("Yad2 %s: %d added", city, added)
+        _save_seen(_seen_urls)
 
 
 def main():
@@ -278,7 +297,6 @@ def main():
     scraper = Scraper()
     scraper.start()
     yad2 = Yad2Scraper()
-    yad2.start(scraper.playwright)
     sheet = SheetClient()
 
     try:
