@@ -4,6 +4,7 @@ import type { Apartment } from "@/types/apartment";
 interface ApartmentPopupProps {
   apartment: Apartment;
   onDelete?: (link: string) => void;
+  onFavorite?: (link: string, favorite: boolean) => void;
 }
 
 function ImageCarousel({ images }: { images: string[] }) {
@@ -48,9 +49,10 @@ function ImageCarousel({ images }: { images: string[] }) {
   );
 }
 
-export default function ApartmentPopup({ apartment, onDelete }: ApartmentPopupProps) {
+export default function ApartmentPopup({ apartment, onDelete, onFavorite }: ApartmentPopupProps) {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   const handleDelete = () => {
     if (!confirmDelete) {
@@ -61,6 +63,12 @@ export default function ApartmentPopup({ apartment, onDelete }: ApartmentPopupPr
     onDelete?.(apartment.link);
   };
 
+  const handleFavorite = async () => {
+    setToggling(true);
+    onFavorite?.(apartment.link, !apartment.isFavorite);
+    setToggling(false);
+  };
+
   return (
     <div className="popup-card">
       {apartment.images.length > 0 && (
@@ -68,7 +76,17 @@ export default function ApartmentPopup({ apartment, onDelete }: ApartmentPopupPr
       )}
       <div className="popup-header">
         <span className="area-name">{apartment.area}</span>
-        {apartment.isCatch && <span className="catch-badge">🔥 CATCH</span>}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {apartment.isCatch && <span className="catch-badge">🔥 CATCH</span>}
+          <button
+            className={`favorite-btn ${apartment.isFavorite ? "active" : ""}`}
+            onClick={handleFavorite}
+            disabled={toggling}
+            title={apartment.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            ★
+          </button>
+        </div>
       </div>
       {apartment.street && (
         <div className="popup-street">{apartment.street}</div>

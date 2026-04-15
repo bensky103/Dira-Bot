@@ -60,12 +60,25 @@ const catchIcon = L.icon({
   className: "catch-marker",
 });
 
+const favoriteIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+  className: "favorite-marker",
+});
+
 interface MapViewProps {
   apartments: Apartment[];
   onDelete?: (link: string) => void;
+  onFavorite?: (link: string, favorite: boolean) => void;
 }
 
-export default function MapView({ apartments, onDelete }: MapViewProps) {
+export default function MapView({ apartments, onDelete, onFavorite }: MapViewProps) {
   return (
     <MapContainer
       center={[32.07, 34.79]}
@@ -82,10 +95,10 @@ export default function MapView({ apartments, onDelete }: MapViewProps) {
         <Marker
           key={`${apt.link}-${i}`}
           position={[apt.lat, apt.lng]}
-          icon={apt.isCatch ? catchIcon : defaultIcon}
+          icon={apt.isFavorite ? favoriteIcon : apt.isCatch ? catchIcon : defaultIcon}
         >
           <PopupAutoSize>
-            <ApartmentPopup apartment={apt} onDelete={onDelete} />
+            <ApartmentPopup apartment={apt} onDelete={onDelete} onFavorite={onFavorite} />
           </PopupAutoSize>
         </Marker>
       ))}
