@@ -24,9 +24,11 @@ const MapView = dynamic(() => import("./MapView"), {
 export default function MapViewDynamic({
   apartments,
   onDelete,
+  onFavorite,
 }: {
   apartments: Apartment[];
   onDelete?: (link: string) => void;
+  onFavorite?: (link: string, favorite: boolean) => void;
 }) {
-  return <MapView apartments={apartments} onDelete={onDelete} />;
+  return <MapView apartments={apartments} onDelete={onDelete} onFavorite={onFavorite} />;
 }

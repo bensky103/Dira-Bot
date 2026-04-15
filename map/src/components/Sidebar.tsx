@@ -17,6 +17,7 @@ export interface Filters {
   maxSqm: number;
   rooms: number[];
   catchesOnly: boolean;
+  favoritesOnly: boolean;
   cities: string[];
   catchCriteria: CatchCriteria;
 }
@@ -24,6 +25,7 @@ export interface Filters {
 interface SidebarProps {
   totalCount: number;
   catchCount: number;
+  favoriteCount: number;
   filters: Filters;
   onFiltersChange: (filters: Filters) => void;
   onRefresh: () => void;
@@ -60,6 +62,7 @@ function Section({
 export default function Sidebar({
   totalCount,
   catchCount,
+  favoriteCount,
   filters,
   onFiltersChange,
   onRefresh,
@@ -83,6 +86,12 @@ export default function Sidebar({
   const toggleCatchesOnly = useCallback(
     () =>
       onFiltersChange({ ...filters, catchesOnly: !filters.catchesOnly }),
+    [filters, onFiltersChange]
+  );
+
+  const toggleFavoritesOnly = useCallback(
+    () =>
+      onFiltersChange({ ...filters, favoritesOnly: !filters.favoritesOnly }),
     [filters, onFiltersChange]
   );
 
@@ -169,6 +178,12 @@ export default function Sidebar({
           </div>
           <div className="label">Catches</div>
         </div>
+        <div className="stat-card">
+          <div className="value" style={{ color: "#fbbf24" }}>
+            {favoriteCount}
+          </div>
+          <div className="label">Favorites</div>
+        </div>
       </div>
 
       <Section title="Time Range">
@@ -244,6 +259,16 @@ export default function Sidebar({
         <div
           className={`toggle-switch ${filters.catchesOnly ? "on" : ""}`}
           onClick={toggleCatchesOnly}
+        >
+          <div className="toggle-knob" />
+        </div>
+      </div>
+
+      <div className="toggle-row">
+        <span style={{ fontSize: 13 }}>★ Favorites only</span>
+        <div
+          className={`toggle-switch ${filters.favoritesOnly ? "on" : ""}`}
+          onClick={toggleFavoritesOnly}
         >
           <div className="toggle-knob" />
         </div>

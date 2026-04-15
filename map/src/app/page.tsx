@@ -13,6 +13,7 @@ const DEFAULT_FILTERS: Filters = {
   maxSqm: 0,
   rooms: [],
   catchesOnly: false,
+  favoritesOnly: false,
   cities: ["תל אביב", "רמת גן", "גבעתיים"],
   catchCriteria: {
     maxPrice: 5000,
@@ -144,6 +145,9 @@ export default function Home() {
       // Catches only
       if (filters.catchesOnly && !apt.isCatch) return false;
 
+      // Favorites only
+      if (filters.favoritesOnly && !apt.isFavorite) return false;
+
       // City filter
       if (!filters.cities.includes(apt.city)) return false;
 
@@ -152,6 +156,7 @@ export default function Home() {
   }, [withCatchFlags, filters]);
 
   const catchCount = filtered.filter((a) => a.isCatch).length;
+  const favoriteCount = filtered.filter((a) => a.isFavorite).length;
 
   const handleDelete = useCallback(async (link: string) => {
     try {
@@ -167,6 +172,31 @@ export default function Home() {
     }
   }, []);
 
+  const handleFavorite = useCallback(async (link: string, favorite: boolean) => {
+    // Optimistic update
+    setApartments((prev) =>
+      prev.map((apt) =>
+        apt.link === link ? { ...apt, isFavorite: favorite } : apt
+      )
+    );
+    try {
+      const res = await fetch("/api/apartments/favorite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link, favorite }),
+      });
+      if (!res.ok) throw new Error("Favorite toggle failed");
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      // Revert on error
+      setApartments((prev) =>
+        prev.map((apt) =>
+          apt.link === link ? { ...apt, isFavorite: !favorite } : apt
+        )
+      );
+    }
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -175,6 +205,7 @@ export default function Home() {
         <Sidebar
           totalCount={filtered.length}
           catchCount={catchCount}
+          favoriteCount={favoriteCount}
           filters={filters}
           onFiltersChange={handleFiltersChange}
           onRefresh={() => fetchData(true)}
@@ -204,7 +235,7 @@ export default function Home() {
           Loading apartments...
         </div>
       ) : (
-        <MapViewDynamic apartments={filtered} onDelete={handleDelete} />
+        <MapViewDynamic apartments={filtered} onDelete={handleDelete} onFavorite={handleFavorite} />
       )}
     </div>
   );
