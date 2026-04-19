@@ -129,12 +129,14 @@ export async function fetchApartments(): Promise<SheetRow[]> {
 
   const rows = await sheet.getRows();
 
-  // Debug: log first row's raw data to see what headers map to
-  if (rows.length > 0) {
-    console.log("[fetch] headers:", JSON.stringify(sheet.headerValues));
-    console.log("[fetch] first row Favorite value:", JSON.stringify(rows[0].get("Favorite")));
-    console.log("[fetch] first row raw:", JSON.stringify(rows[0].toObject()));
-  }
+  // Debug: find rows with non-False favorite values
+  const favRows = rows.filter((r) => {
+    const val = r.get("Favorite");
+    return val && String(val).toLowerCase() !== "false";
+  });
+  console.log("[fetch] rows with favorites:", favRows.length,
+    favRows.map((r) => ({ link: r.get("Link")?.slice(-20), fav: r.get("Favorite"), type: typeof r.get("Favorite") }))
+  );
 
   return rows.map((row) => ({
     timestamp: row.get("Timestamp") || "",

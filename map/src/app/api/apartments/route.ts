@@ -89,7 +89,7 @@ async function loadApartments(): Promise<Apartment[]> {
         phone: row.phone,
         link: row.link,
         isCatch: row.isCatch === "True" || row.isCatch === "true",
-        isFavorite: row.favorite === "True" || row.favorite === "true",
+        isFavorite: String(row.favorite).toLowerCase() === "true",
         lat: coords.lat,
         lng: coords.lng,
         images: row.images ? row.images.split("|").filter(Boolean) : [],
