@@ -7,7 +7,7 @@ from google.oauth2.service_account import Credentials
 
 from src.config import GOOGLE_SHEET_NAME, SHEET_HEADERS, DATA_DIR
 
-STALE_DAYS = 21
+STALE_DAYS = 14
 
 logger = logging.getLogger(__name__)
 
