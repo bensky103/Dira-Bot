@@ -186,6 +186,8 @@ export default function Home() {
         body: JSON.stringify({ link, favorite }),
       });
       if (!res.ok) throw new Error("Favorite toggle failed");
+      // Force refresh to bust server cache (cache invalidation doesn't work across Vercel serverless instances)
+      fetchData(true);
     } catch (err) {
       console.error("Failed to toggle favorite:", err);
       // Revert on error
