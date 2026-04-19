@@ -10,6 +10,10 @@ import type { Apartment } from "@/types/apartment";
 let cache: { data: Apartment[]; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+export function invalidateApartmentCache() {
+  cache = null;
+}
+
 async function resolveCoordinates(
   street: string,
   city: string,

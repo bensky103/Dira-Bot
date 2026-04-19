@@ -120,6 +120,13 @@ export async function fetchApartments(): Promise<SheetRow[]> {
 
   const sheetName = process.env.GOOGLE_SHEET_NAME || "Dira-Bot";
   const sheet = doc.sheetsByTitle[sheetName] ?? doc.sheetsByIndex[0];
+
+  // Ensure "Favorite" header exists so row.get("Favorite") works
+  await sheet.loadHeaderRow();
+  if (!sheet.headerValues.includes("Favorite")) {
+    await sheet.setHeaderRow([...sheet.headerValues, "Favorite"]);
+  }
+
   const rows = await sheet.getRows();
 
   return rows.map((row) => ({
