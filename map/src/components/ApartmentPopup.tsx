@@ -108,6 +108,20 @@ export default function ApartmentPopup({ apartment, onDelete, onFavorite }: Apar
             <span className="detail-value">{apartment.size} m²</span>
           </div>
         )}
+        {apartment.timestamp && (
+          <div className="detail-row">
+            <span className="detail-label">Added</span>
+            <span className="detail-value">
+              {(() => {
+                const d = new Date(apartment.timestamp);
+                const dd = String(d.getDate()).padStart(2, "0");
+                const mm = String(d.getMonth() + 1).padStart(2, "0");
+                const yy = String(d.getFullYear()).slice(-2);
+                return `${dd}/${mm}/${yy}`;
+              })()}
+            </span>
+          </div>
+        )}
       </div>
       <a
         className="popup-link"
