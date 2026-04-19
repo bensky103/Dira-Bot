@@ -121,22 +121,7 @@ export async function fetchApartments(): Promise<SheetRow[]> {
   const sheetName = process.env.GOOGLE_SHEET_NAME || "Dira-Bot";
   const sheet = doc.sheetsByTitle[sheetName] ?? doc.sheetsByIndex[0];
 
-  // Ensure "Favorite" header exists so row.get("Favorite") works
-  await sheet.loadHeaderRow();
-  if (!sheet.headerValues.includes("Favorite")) {
-    await sheet.setHeaderRow([...sheet.headerValues, "Favorite"]);
-  }
-
   const rows = await sheet.getRows();
-
-  // Debug: find rows with non-False favorite values
-  const favRows = rows.filter((r) => {
-    const val = r.get("Favorite");
-    return val && String(val).toLowerCase() !== "false";
-  });
-  console.log("[fetch] rows with favorites:", favRows.length,
-    favRows.map((r) => ({ link: r.get("Link")?.slice(-20), fav: r.get("Favorite"), type: typeof r.get("Favorite") }))
-  );
 
   return rows.map((row) => ({
     timestamp: row.get("Timestamp") || "",

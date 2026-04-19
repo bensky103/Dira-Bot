@@ -88,7 +88,7 @@ async function loadApartments(): Promise<Apartment[]> {
         size: parseFloat(row.size) || 0,
         phone: row.phone,
         link: row.link,
-        isCatch: row.isCatch === "True" || row.isCatch === "true",
+        isCatch: String(row.isCatch).toLowerCase() === "true",
         isFavorite: String(row.favorite).toLowerCase() === "true",
         lat: coords.lat,
         lng: coords.lng,

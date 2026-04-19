@@ -66,8 +66,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update sheet" }, { status: 500 });
     }
 
-    console.log(`[favorite] wrote "${value}" to cell ${cellRef}`);
-
     invalidateApartmentCache();
 
     return NextResponse.json({ ok: true, favorite });
