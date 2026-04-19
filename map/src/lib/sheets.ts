@@ -129,6 +129,13 @@ export async function fetchApartments(): Promise<SheetRow[]> {
 
   const rows = await sheet.getRows();
 
+  // Debug: log first row's raw data to see what headers map to
+  if (rows.length > 0) {
+    console.log("[fetch] headers:", JSON.stringify(sheet.headerValues));
+    console.log("[fetch] first row Favorite value:", JSON.stringify(rows[0].get("Favorite")));
+    console.log("[fetch] first row raw:", JSON.stringify(rows[0].toObject()));
+  }
+
   return rows.map((row) => ({
     timestamp: row.get("Timestamp") || "",
     city: row.get("City") || "",
