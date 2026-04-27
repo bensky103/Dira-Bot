@@ -148,12 +148,9 @@ class Yad2Scraper:
 
             listing_url = f"https://www.yad2.co.il/realestate/item/{item_id}"
             phone = item.get("phone", "") or ""
-            description = (
-                item.get("description")
-                or item.get("info_text")
-                or item.get("description_short")
-                or ""
-            )
+            # Yad2 list-endpoint description text. `search_text` is the searchable
+            # body blob; fall back to `info_text` for older response shapes.
+            description = item.get("search_text") or item.get("info_text") or ""
 
             return {
                 "url": listing_url,
