@@ -51,9 +51,39 @@ function getTimeThreshold(range: string): Date {
   }
 }
 
+const FILTERS_STORAGE_KEY = "dira-bot:filters:v1";
+
+// Persist all UI-side filters except catchCriteria (which lives in the Google Sheet Config tab).
+type StoredFilters = Omit<Filters, "catchCriteria">;
+
+function loadStoredFilters(): StoredFilters | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredFilters>;
+    // Defensive: ensure shape matches what we expect.
+    if (!parsed || typeof parsed !== "object") return null;
+    return {
+      timeRange: parsed.timeRange ?? DEFAULT_FILTERS.timeRange,
+      minPrice: parsed.minPrice ?? DEFAULT_FILTERS.minPrice,
+      maxPrice: parsed.maxPrice ?? DEFAULT_FILTERS.maxPrice,
+      minSqm: parsed.minSqm ?? DEFAULT_FILTERS.minSqm,
+      maxSqm: parsed.maxSqm ?? DEFAULT_FILTERS.maxSqm,
+      rooms: Array.isArray(parsed.rooms) ? parsed.rooms : DEFAULT_FILTERS.rooms,
+      catchesOnly: !!parsed.catchesOnly,
+      favoritesOnly: !!parsed.favoritesOnly,
+      cities: Array.isArray(parsed.cities) ? parsed.cities : DEFAULT_FILTERS.cities,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function Home() {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,6 +103,15 @@ export default function Home() {
     }
   }, []);
 
+  // Hydrate filters from localStorage after mount (avoids SSR hydration mismatch).
+  useEffect(() => {
+    const stored = loadStoredFilters();
+    if (stored) {
+      setFilters((prev) => ({ ...stored, catchCriteria: prev.catchCriteria }));
+    }
+    setFiltersHydrated(true);
+  }, []);
+
   // Load catch config from sheet on mount
   useEffect(() => {
     fetch("/api/catch-config")
@@ -84,6 +123,18 @@ export default function Home() {
       })
       .catch(() => {});
   }, []);
+
+  // Persist filters to localStorage on every change (after hydration).
+  useEffect(() => {
+    if (!filtersHydrated) return;
+    try {
+      const { catchCriteria: _ignored, ...toStore } = filters;
+      void _ignored;
+      window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+      /* localStorage may be unavailable (private mode, quota) — ignore */
+    }
+  }, [filters, filtersHydrated]);
 
   // Save catch config to sheet when it changes
   const handleFiltersChange = useCallback(
@@ -197,6 +248,29 @@ export default function Home() {
     }
   }, []);
 
+  const handleSeen = useCallback(async (link: string, seen: boolean) => {
+    // Optimistic update
+    setApartments((prev) =>
+      prev.map((apt) => (apt.link === link ? { ...apt, isSeen: seen } : apt))
+    );
+    try {
+      const res = await fetch("/api/apartments/seen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link, seen }),
+      });
+      if (!res.ok) throw new Error("Seen toggle failed");
+    } catch (err) {
+      console.error("Failed to toggle seen:", err);
+      // Revert on error
+      setApartments((prev) =>
+        prev.map((apt) =>
+          apt.link === link ? { ...apt, isSeen: !seen } : apt
+        )
+      );
+    }
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -235,7 +309,12 @@ export default function Home() {
           Loading apartments...
         </div>
       ) : (
-        <MapViewDynamic apartments={filtered} onDelete={handleDelete} onFavorite={handleFavorite} />
+        <MapViewDynamic
+          apartments={filtered}
+          onDelete={handleDelete}
+          onFavorite={handleFavorite}
+          onSeen={handleSeen}
+        />
       )}
     </div>
   );

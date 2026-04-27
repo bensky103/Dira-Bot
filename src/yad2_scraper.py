@@ -148,6 +148,12 @@ class Yad2Scraper:
 
             listing_url = f"https://www.yad2.co.il/realestate/item/{item_id}"
             phone = item.get("phone", "") or ""
+            description = (
+                item.get("description")
+                or item.get("info_text")
+                or item.get("description_short")
+                or ""
+            )
 
             return {
                 "url": listing_url,
@@ -160,6 +166,7 @@ class Yad2Scraper:
                 "sqm": sqm,
                 "phone": str(phone),
                 "is_catch": False,
+                "description": str(description),
             }
 
         except Exception as e:

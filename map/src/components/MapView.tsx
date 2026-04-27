@@ -72,13 +72,35 @@ const favoriteIcon = L.icon({
   className: "favorite-marker",
 });
 
+const seenIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+  className: "seen-marker",
+});
+
 interface MapViewProps {
   apartments: Apartment[];
   onDelete?: (link: string) => void;
   onFavorite?: (link: string, favorite: boolean) => void;
+  onSeen?: (link: string, seen: boolean) => void;
 }
 
-export default function MapView({ apartments, onDelete, onFavorite }: MapViewProps) {
+function pickIcon(apt: Apartment): L.Icon {
+  // Favorite always wins (most important state to surface)
+  if (apt.isFavorite) return favoriteIcon;
+  // Seen greys out everything else
+  if (apt.isSeen) return seenIcon;
+  if (apt.isCatch) return catchIcon;
+  return defaultIcon;
+}
+
+export default function MapView({ apartments, onDelete, onFavorite, onSeen }: MapViewProps) {
   return (
     <MapContainer
       center={[32.07, 34.79]}
@@ -95,10 +117,20 @@ export default function MapView({ apartments, onDelete, onFavorite }: MapViewPro
         <Marker
           key={`${apt.link}-${i}`}
           position={[apt.lat, apt.lng]}
-          icon={apt.isFavorite ? favoriteIcon : apt.isCatch ? catchIcon : defaultIcon}
+          icon={pickIcon(apt)}
+          eventHandlers={{
+            click: () => {
+              if (!apt.isSeen) onSeen?.(apt.link, true);
+            },
+          }}
         >
           <PopupAutoSize>
-            <ApartmentPopup apartment={apt} onDelete={onDelete} onFavorite={onFavorite} />
+            <ApartmentPopup
+              apartment={apt}
+              onDelete={onDelete}
+              onFavorite={onFavorite}
+              onSeen={onSeen}
+            />
           </PopupAutoSize>
         </Marker>
       ))}

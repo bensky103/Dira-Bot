@@ -28,6 +28,7 @@ class SheetClient:
         self._sheet = self._workbook.sheet1
         self._ensure_headers()
         self._backfill_favorites()
+        self._backfill_seen()
         # Cache links in memory to avoid repeated API calls
         self._known_links: set[str] = set(self._sheet.col_values(
             SHEET_HEADERS.index("Link") + 1
@@ -53,6 +54,18 @@ class SheetClient:
         if updates:
             self._sheet.batch_update(updates)
             logger.info("Backfilled %d rows with Favorite=False", len(updates))
+
+    def _backfill_seen(self):
+        """Fill empty Seen column cells with 'False' for existing rows."""
+        seen_col = SHEET_HEADERS.index("Seen") + 1  # 1-indexed for gspread
+        all_rows = self._sheet.get_all_values()
+        updates = []
+        for i, row in enumerate(all_rows[1:], start=2):  # skip header
+            if len(row) < seen_col or not row[seen_col - 1].strip():
+                updates.append({"range": f"{chr(64 + seen_col)}{i}", "values": [["False"]]})
+        if updates:
+            self._sheet.batch_update(updates)
+            logger.info("Backfilled %d rows with Seen=False", len(updates))
 
     def _load_composite_keys(self) -> set[tuple]:
         """Load composite keys from existing sheet rows for cross-group dedup."""
@@ -97,7 +110,13 @@ class SheetClient:
     def link_exists(self, link: str) -> bool:
         return link in self._known_links
 
-    def _build_row(self, parsed: dict, link: str, images: list[str] | None = None) -> list:
+    def _build_row(
+        self,
+        parsed: dict,
+        link: str,
+        images: list[str] | None = None,
+        description: str = "",
+    ) -> list:
         """Build a sheet row from parsed data."""
         return [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -112,6 +131,8 @@ class SheetClient:
             str(parsed.get("is_catch", False)),
             "|".join(images) if images else "",
             "False",
+            "False",
+            description or "",
         ]
 
     def _track_listing(self, parsed: dict, link: str):
@@ -126,23 +147,35 @@ class SheetClient:
         if key:
             self._known_composites.add(key)
 
-    def append_listing(self, parsed: dict, link: str, images: list[str] | None = None):
+    def append_listing(
+        self,
+        parsed: dict,
+        link: str,
+        images: list[str] | None = None,
+        description: str = "",
+    ):
         if self.link_exists(link):
             logger.info("Duplicate skipped: %s", link)
             return
 
-        row = self._build_row(parsed, link, images)
+        row = self._build_row(parsed, link, images, description)
         self._sheet.append_row(row, value_input_option="USER_ENTERED")
         self._track_listing(parsed, link)
         logger.info("Row added: %s – %s", parsed.get("city"), link)
 
-    def queue_listing(self, parsed: dict, link: str, images: list[str] | None = None):
+    def queue_listing(
+        self,
+        parsed: dict,
+        link: str,
+        images: list[str] | None = None,
+        description: str = "",
+    ):
         """Queue a listing for batch append. Updates caches immediately for dedup."""
         if self.link_exists(link):
             logger.info("Duplicate skipped: %s", link)
             return False
 
-        row = self._build_row(parsed, link, images)
+        row = self._build_row(parsed, link, images, description)
         self._pending_rows.append(row)
         self._track_listing(parsed, link)
         return True

@@ -25,10 +25,19 @@ export default function MapViewDynamic({
   apartments,
   onDelete,
   onFavorite,
+  onSeen,
 }: {
   apartments: Apartment[];
   onDelete?: (link: string) => void;
   onFavorite?: (link: string, favorite: boolean) => void;
+  onSeen?: (link: string, seen: boolean) => void;
 }) {
-  return <MapView apartments={apartments} onDelete={onDelete} onFavorite={onFavorite} />;
+  return (
+    <MapView
+      apartments={apartments}
+      onDelete={onDelete}
+      onFavorite={onFavorite}
+      onSeen={onSeen}
+    />
+  );
 }

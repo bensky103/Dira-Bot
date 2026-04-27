@@ -10,6 +10,8 @@ export interface Apartment {
   link: string;
   isCatch: boolean;
   isFavorite: boolean;
+  isSeen: boolean;
+  description: string;
   lat: number;
   lng: number;
   images: string[];
