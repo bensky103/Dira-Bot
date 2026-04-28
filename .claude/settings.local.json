@@ -71,7 +71,8 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('src/scraper.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
       "Bash(python -c ':*)",
       "Bash(python -c \"import ast; ast.parse\\(open\\('src/image_store.py'\\).read\\(\\)\\); print\\('image_store.py: OK'\\)\")",
-      "Bash(ls -t C:/Users/Bensky/Desktop/Elevize/Dira-Bot/logs/*.log)"
+      "Bash(ls -t C:/Users/Bensky/Desktop/Elevize/Dira-Bot/logs/*.log)",
+      "Bash(git fetch *)"
     ]
   }
 }

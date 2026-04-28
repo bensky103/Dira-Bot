@@ -6,6 +6,8 @@ import time
 
 import requests
 
+from src.yad2_filter import should_keep
+
 logger = logging.getLogger(__name__)
 
 # Yad2 city codes for rental search
@@ -117,6 +119,12 @@ class Yad2Scraper:
         try:
             item_id = item.get("id") or item.get("link_token")
             if not item_id:
+                return None
+
+            # Policy filter — reject roommate/studio/sublet before any parsing
+            keep, reason = should_keep(item)
+            if not keep:
+                logger.debug("Yad2 filter rejected %s: %s", item_id, reason)
                 return None
 
             # Price — comes as string like "27,000 ₪"

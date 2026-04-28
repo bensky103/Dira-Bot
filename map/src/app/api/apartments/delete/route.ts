@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
+import { invalidateApartmentCache } from "../route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     await row.delete();
+    invalidateApartmentCache();
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Delete error:", error);
