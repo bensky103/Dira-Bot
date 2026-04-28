@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Apartment } from "@/types/apartment";
 
 interface ApartmentPopupProps {
@@ -18,8 +19,10 @@ function Lightbox({
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(startIndex);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowLeft")
@@ -36,7 +39,11 @@ function Lightbox({
     };
   }, [images.length, onClose]);
 
-  return (
+  // Portal to <body> so the overlay escapes Leaflet popup's transform context,
+  // which otherwise breaks `position: fixed` (it would be fixed to the popup).
+  if (!mounted) return null;
+
+  const overlay = (
     <div className="lightbox-overlay" onClick={onClose}>
       <button
         className="lightbox-close"
@@ -83,6 +90,8 @@ function Lightbox({
       )}
     </div>
   );
+
+  return createPortal(overlay, document.body);
 }
 
 function ImageCarousel({

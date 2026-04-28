@@ -214,7 +214,7 @@ def run_cycle(scraper: Scraper, yad2: Yad2Scraper, sheet: SheetClient):
         for post in new_posts:
             _seen_urls.add(post["url"])
 
-            parsed = parse_post(post["text"])
+            parsed = parse_post(post["text"], post.get("group_name", ""))
             if parsed is None:
                 skipped += 1
                 continue

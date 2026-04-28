@@ -669,23 +669,46 @@ body {
 }
 
 /* ── Lightbox (full-screen image viewer) ── */
+/* Rendered via React Portal into <body> so position:fixed isn't broken by
+   Leaflet popup's transform context. Sized in dvh/dvw so mobile browser
+   chrome (URL bar showing/hiding) doesn't crop it. */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.92);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.95);
   z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  /* Defensive: avoid being shrunk by any flex parent if portal target changes */
+  margin: 0;
+  padding: 0;
 }
 
 .lightbox-img {
-  max-width: 95vw;
-  max-height: 92vh;
+  width: auto;
+  height: auto;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
   object-fit: contain;
   cursor: default;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  display: block;
+}
+
+/* Desktop: leave a small visual breathing margin so close/nav buttons don't
+   sit on top of the image. */
+@media (min-width: 769px) {
+  .lightbox-img {
+    max-width: 95vw;
+    max-height: 92vh;
+    max-height: 92dvh;
+  }
 }
 
 .lightbox-close {

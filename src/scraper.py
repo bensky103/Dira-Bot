@@ -124,9 +124,23 @@ class Scraper:
 
             # Extract posts from feed children (not role="article" — Facebook
             # doesn't always use that role on group post containers)
-            posts = page.evaluate("""() => {
+            scrape_result = page.evaluate("""() => {
                 const feed = document.querySelector('[role="feed"]');
-                if (!feed) return [];
+                if (!feed) return { groupName: '', posts: [] };
+
+                // Group name: prefer h1 inside the page, fall back to <title>.
+                // FB titles look like "(2) דירות להשכרה ברמת גן | Facebook" — strip the prefix counter and suffix.
+                const cleanTitle = (s) => {
+                    if (!s) return '';
+                    return s.replace(/^\\s*\\(\\d+\\)\\s*/, '')
+                            .replace(/\\s*\\|\\s*Facebook\\s*$/i, '')
+                            .trim();
+                };
+                let groupName = '';
+                const h1 = document.querySelector('h1');
+                if (h1) groupName = h1.innerText.trim();
+                if (!groupName) groupName = cleanTitle(document.title);
+                else groupName = cleanTitle(groupName);
 
                 const results = [];
                 const children = Array.from(feed.children);
@@ -256,8 +270,15 @@ class Scraper:
                         images: images
                     });
                 }
-                return results;
+                return { groupName: groupName, posts: results };
             }""")
+
+            group_name = scrape_result.get("groupName", "") if isinstance(scrape_result, dict) else ""
+            posts = scrape_result.get("posts", []) if isinstance(scrape_result, dict) else []
+            for p in posts:
+                p["group_name"] = group_name
+            if group_name:
+                logger.info("Group name: %s", group_name)
 
             # Log posts with missing links for debugging
             no_link = sum(1 for p in posts if p["url"].startswith("__no_link__"))

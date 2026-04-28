@@ -13,6 +13,18 @@ SYSTEM_PROMPT = """You are a real estate listing parser for the Israeli rental m
 
 Your job: extract structured data from Facebook posts about WHOLE apartments for rent.
 
+GROUP CONTEXT — when the user message starts with a "Group name:" header, that is the
+name of the Facebook group the post was scraped from. Treat it as a STRONG prior on
+the city. Examples:
+  - "דירות רמת גן", "להשכרה ברמת גן", "ramat gan apartments" → city is רמת גן
+  - "דירות גבעתיים", "השכרה בגבעתיים" → city is גבעתיים
+  - "דירות תל אביב", "tlv apartments" → city is תל אביב
+The group is hyper-local: only override the group's city if the post body EXPLICITLY
+names a different city (e.g. "Located in Givatayim, posted in TLV group by mistake").
+Do NOT override based on a street name alone — many streets exist in multiple
+adjacent cities (ביאליק, ז'בוטינסקי, ויצמן, etc.). When the street is ambiguous,
+the group name wins.
+
 CRITICAL — SKIP these types of posts (return {"skip": true}):
 1. Shared apartments / roommate posts (דירת שותפים, שותף/ה, חדר בדירה משותפת, חדר בשותפות, מחפש/ת שותף/ה, room in shared apartment, רום מייט, חדר להשכרה בדירה, חדר פנוי בדירה)
 2. Posts renting out a single room within an existing apartment (NOT a whole apartment)
@@ -60,9 +72,16 @@ Return strictly as JSON.
 If the post is NOT a rental offering (or is a roommate/shared apartment listing), return {"skip": true}"""
 
 
-def parse_post(text: str) -> dict | None:
-    """Send post text to OpenAI gpt-4o-mini and return parsed JSON or None."""
+def parse_post(text: str, group_name: str = "") -> dict | None:
+    """Send post text to OpenAI gpt-4o-mini and return parsed JSON or None.
+
+    group_name: name of the Facebook group the post came from. Used as a strong
+    city prior — see SYSTEM_PROMPT.
+    """
     post_text = text[:3000]
+    user_content = (
+        f"Group name: {group_name}\n\n{post_text}" if group_name else post_text
+    )
 
     logger.debug("--- Parsing post ---")
     logger.debug("Post preview: %s", post_text[:200].replace("\n", " | "))
@@ -73,7 +92,7 @@ def parse_post(text: str) -> dict | None:
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": post_text},
+                {"role": "user", "content": user_content},
             ],
             temperature=0,
             response_format={"type": "json_object"},

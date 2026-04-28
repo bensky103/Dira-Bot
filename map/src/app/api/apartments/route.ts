@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { fetchApartments } from "@/lib/sheets";
 import { geocodeAddress } from "@/lib/geocode";
 import { getNeighborhoodCoords } from "@/lib/neighborhoods";
@@ -6,13 +7,9 @@ import { reverseGeocodeCity } from "@/lib/reverseGeocode";
 import { hashOffset } from "@/lib/hashOffset";
 import type { Apartment } from "@/types/apartment";
 
-// Simple in-memory cache
-let cache: { data: Apartment[]; timestamp: number } | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-export function invalidateApartmentCache() {
-  cache = null;
-}
+// Tag used by action routes (delete/favorite/seen) to invalidate via revalidateTag.
+// Must be exported so action routes import a single source of truth.
+export const APARTMENTS_CACHE_TAG = "apartments";
 
 async function resolveCoordinates(
   street: string,
@@ -104,26 +101,26 @@ async function loadApartments(): Promise<Apartment[]> {
   return apartments.filter((a) => a.price > 0 && a.lat !== 0);
 }
 
+// Cached across all serverless instances via Next.js Data Cache.
+// Action routes call `revalidateTag(APARTMENTS_CACHE_TAG, { expire: 0 })` to bust it instantly.
+const getCachedApartments = unstable_cache(
+  loadApartments,
+  ["apartments-v1"],
+  { tags: [APARTMENTS_CACHE_TAG], revalidate: 5 * 60 }
+);
+
 export async function GET(request: NextRequest) {
   try {
     const force = request.nextUrl.searchParams.get("force") === "true";
-
-    if (!force && cache && Date.now() - cache.timestamp < CACHE_TTL) {
-      return NextResponse.json(cache.data, {
-        headers: {
-          "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
-          "X-Cache": "HIT",
-        },
-      });
-    }
-
-    const apartments = await loadApartments();
-    cache = { data: apartments, timestamp: Date.now() };
+    // For manual refresh, expire the tag first so the cached call repopulates
+    // with fresh data — this also propagates to other instances.
+    if (force) revalidateTag(APARTMENTS_CACHE_TAG, { expire: 0 });
+    const apartments = await getCachedApartments();
 
     return NextResponse.json(apartments, {
       headers: {
         "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
-        "X-Cache": "MISS",
+        "X-Cache": force ? "REFRESHED" : "DATA-CACHE",
       },
     });
   } catch (error) {

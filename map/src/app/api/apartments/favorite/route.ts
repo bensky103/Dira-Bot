@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
-import { invalidateApartmentCache } from "../route";
+import { APARTMENTS_CACHE_TAG } from "../route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update sheet" }, { status: 500 });
     }
 
-    invalidateApartmentCache();
+    revalidateTag(APARTMENTS_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ ok: true, favorite });
   } catch (error) {
