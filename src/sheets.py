@@ -216,11 +216,40 @@ class SheetClient:
             logger.info("No stale rows to clean up")
             return self._known_links.copy()
 
-        # Delete from bottom to top so indices don't shift
-        for idx in reversed(stale_indices):
-            self._sheet.delete_rows(idx)
+        # Group consecutive indices into ranges so a sheet with 200 stale rows
+        # becomes a handful of deleteDimension requests instead of 200 writes.
+        stale_indices.sort()
+        ranges: list[tuple[int, int]] = []
+        range_start = range_end = stale_indices[0]
+        for idx in stale_indices[1:]:
+            if idx == range_end + 1:
+                range_end = idx
+            else:
+                ranges.append((range_start, range_end))
+                range_start = range_end = idx
+        ranges.append((range_start, range_end))
 
-        logger.info("Cleaned up %d stale rows (older than %d days)", len(stale_indices), STALE_DAYS)
+        # Issue all deletes in a single batch_update API call. Requests are
+        # applied in order and shift subsequent indices, so go bottom-to-top.
+        requests = [
+            {
+                "deleteDimension": {
+                    "range": {
+                        "sheetId": self._sheet.id,
+                        "dimension": "ROWS",
+                        "startIndex": start - 1,  # 0-indexed, inclusive
+                        "endIndex": end,          # 0-indexed, exclusive
+                    }
+                }
+            }
+            for start, end in reversed(ranges)
+        ]
+        self._workbook.batch_update({"requests": requests})
+
+        logger.info(
+            "Cleaned up %d stale rows in %d range(s) (older than %d days)",
+            len(stale_indices), len(ranges), STALE_DAYS,
+        )
 
         # Rebuild caches after deletion
         self._known_links = set(self._sheet.col_values(

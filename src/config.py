@@ -51,6 +51,9 @@ GROUPS = [
     "https://www.facebook.com/groups/1456553661265604",
     "https://www.facebook.com/groups/1870209196564360/",
     "https://www.facebook.com/groups/1424244737803677/",
+    "https://www.facebook.com/groups/550870795608828/",
+    "https://www.facebook.com/groups/1663070923962851/",
+    "https://www.facebook.com/groups/dirotlehascarabeherzelia/",
 ]
 
 # ── Yad2 Cities ──
