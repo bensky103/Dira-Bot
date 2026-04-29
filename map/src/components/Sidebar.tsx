@@ -6,7 +6,6 @@ export interface CatchCriteria {
   maxPrice: number;
   minRooms: number;
   minSqm: number;
-  cities: string[];
 }
 
 export interface Filters {
@@ -18,7 +17,6 @@ export interface Filters {
   rooms: number[];
   catchesOnly: boolean;
   favoritesOnly: boolean;
-  cities: string[];
   catchCriteria: CatchCriteria;
 }
 
@@ -34,7 +32,6 @@ interface SidebarProps {
 
 const TIME_OPTIONS = ["24h", "3d", "7d", "30d", "All"];
 const ROOM_OPTIONS = [2, 2.5, 3, 3.5, 4];
-const CITY_OPTIONS = ["תל אביב", "רמת גן", "גבעתיים"];
 
 function Section({
   title,
@@ -95,16 +92,6 @@ export default function Sidebar({
     [filters, onFiltersChange]
   );
 
-  const toggleCity = useCallback(
-    (city: string) => {
-      const cities = filters.cities.includes(city)
-        ? filters.cities.filter((c) => c !== city)
-        : [...filters.cities, city];
-      onFiltersChange({ ...filters, cities });
-    },
-    [filters, onFiltersChange]
-  );
-
   const handleMinPrice = useCallback(
     (val: string) => {
       const num = parseInt(val) || 0;
@@ -145,16 +132,6 @@ export default function Sidebar({
       });
     },
     [filters, onFiltersChange]
-  );
-
-  const toggleCatchCity = useCallback(
-    (city: string) => {
-      const cities = filters.catchCriteria.cities.includes(city)
-        ? filters.catchCriteria.cities.filter((c) => c !== city)
-        : [...filters.catchCriteria.cities, city];
-      updateCatch({ cities });
-    },
-    [filters.catchCriteria.cities, updateCatch]
   );
 
   const timeAgo = lastUpdated
@@ -274,21 +251,6 @@ export default function Sidebar({
         </div>
       </div>
 
-      <Section title="Cities">
-        <div className="checkbox-group">
-          {CITY_OPTIONS.map((city) => (
-            <label key={city}>
-              <input
-                type="checkbox"
-                checked={filters.cities.includes(city)}
-                onChange={() => toggleCity(city)}
-              />
-              {city}
-            </label>
-          ))}
-        </div>
-      </Section>
-
       <Section title="🔥 Catch Criteria" defaultOpen={false}>
         <div className="catch-config">
           <div className="catch-row">
@@ -323,21 +285,6 @@ export default function Sidebar({
                 updateCatch({ minSqm: parseInt(e.target.value) || 0 })
               }
             />
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <span className="catch-label">Cities</span>
-            <div className="checkbox-group" style={{ marginTop: 4 }}>
-              {CITY_OPTIONS.map((city) => (
-                <label key={city}>
-                  <input
-                    type="checkbox"
-                    checked={filters.catchCriteria.cities.includes(city)}
-                    onChange={() => toggleCatchCity(city)}
-                  />
-                  {city}
-                </label>
-              ))}
-            </div>
           </div>
         </div>
       </Section>

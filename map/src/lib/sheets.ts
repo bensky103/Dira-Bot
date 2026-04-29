@@ -41,7 +41,6 @@ export interface CatchConfig {
   maxPrice: number;
   minRooms: number;
   minSqm: number;
-  cities: string[];
 }
 
 const CONFIG_TAB = "Config";
@@ -78,7 +77,6 @@ export async function fetchCatchConfig(): Promise<CatchConfig | null> {
     maxPrice: parseInt(config["catch_max_price"]) || 0,
     minRooms: parseFloat(config["catch_min_rooms"]) || 0,
     minSqm: parseInt(config["catch_min_sqm"]) || 0,
-    cities: config["catch_cities"] ? config["catch_cities"].split(",") : [],
   };
 }
 
@@ -94,7 +92,6 @@ export async function saveCatchConfig(config: CatchConfig): Promise<void> {
     catch_max_price: String(config.maxPrice),
     catch_min_rooms: String(config.minRooms),
     catch_min_sqm: String(config.minSqm),
-    catch_cities: config.cities.join(","),
   };
 
   // Update existing rows or add new ones

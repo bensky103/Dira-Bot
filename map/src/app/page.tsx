@@ -14,12 +14,10 @@ const DEFAULT_FILTERS: Filters = {
   rooms: [],
   catchesOnly: false,
   favoritesOnly: false,
-  cities: ["תל אביב", "רמת גן", "גבעתיים"],
   catchCriteria: {
     maxPrice: 5000,
     minRooms: 2,
     minSqm: 50,
-    cities: ["תל אביב"],
   },
 };
 
@@ -30,8 +28,6 @@ function matchesCatchCriteria(
   if (criteria.maxPrice && apt.price > criteria.maxPrice) return false;
   if (criteria.minRooms && apt.rooms < criteria.minRooms) return false;
   if (criteria.minSqm && apt.size && apt.size < criteria.minSqm) return false;
-  if (criteria.cities.length > 0 && !criteria.cities.includes(apt.city))
-    return false;
   return true;
 }
 
@@ -73,7 +69,6 @@ function loadStoredFilters(): StoredFilters | null {
       rooms: Array.isArray(parsed.rooms) ? parsed.rooms : DEFAULT_FILTERS.rooms,
       catchesOnly: !!parsed.catchesOnly,
       favoritesOnly: !!parsed.favoritesOnly,
-      cities: Array.isArray(parsed.cities) ? parsed.cities : DEFAULT_FILTERS.cities,
     };
   } catch {
     return null;
@@ -198,9 +193,6 @@ export default function Home() {
 
       // Favorites only
       if (filters.favoritesOnly && !apt.isFavorite) return false;
-
-      // City filter
-      if (!filters.cities.includes(apt.city)) return false;
 
       return true;
     });

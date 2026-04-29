@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const config = await fetchCatchConfig();
     return NextResponse.json(
-      config ?? { maxPrice: 5000, minRooms: 2, minSqm: 50, cities: ["תל אביב"] }
+      config ?? { maxPrice: 5000, minRooms: 2, minSqm: 50 }
     );
   } catch (error) {
     console.error("Failed to fetch catch config:", error);
