@@ -15,6 +15,8 @@ YAD2_CITY_CODES = {
     "תל אביב": 5000,
     "רמת גן": 8600,
     "גבעתיים": 6300,
+    "הרצליה": 6400,
+    "רמת השרון": 2650,
 }
 
 # Map Yad2 top-area IDs to Hebrew area names
@@ -156,9 +158,11 @@ class Yad2Scraper:
 
             listing_url = f"https://www.yad2.co.il/realestate/item/{item_id}"
             phone = item.get("phone", "") or ""
-            # Yad2 list-endpoint description text. `search_text` is the searchable
-            # body blob; fall back to `info_text` for older response shapes.
-            description = item.get("search_text") or item.get("info_text") or ""
+            # Yad2 list-endpoint description text. Prefer `info_text` (the
+            # rendered listing body); `search_text` is a search-index blob that
+            # often concatenates the title with the body, causing duplicated
+            # content in the UI. Fall back to `search_text` only if absent.
+            description = item.get("info_text") or item.get("search_text") or ""
 
             return {
                 "url": listing_url,

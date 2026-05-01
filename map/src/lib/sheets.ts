@@ -16,6 +16,9 @@ interface SheetRow {
   favorite: string;
   seen: string;
   description: string;
+  lat: string;
+  lng: string;
+  verifiedCity: string;
 }
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
@@ -137,5 +140,8 @@ export async function fetchApartments(): Promise<SheetRow[]> {
     favorite: row.get("Favorite") || "False",
     seen: row.get("Seen") || "False",
     description: row.get("Description") || "",
+    lat: row.get("Lat") || "",
+    lng: row.get("Lng") || "",
+    verifiedCity: row.get("VerifiedCity") || "",
   }));
 }

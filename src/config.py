@@ -57,7 +57,7 @@ GROUPS = [
 ]
 
 # ── Yad2 Cities ──
-YAD2_CITIES = ["תל אביב", "רמת גן", "גבעתיים"]
+YAD2_CITIES = ["תל אביב", "רמת גן", "גבעתיים", "הרצליה", "רמת השרון"]
 
 # ── Scraping Intervals ──
 CYCLE_INTERVAL_SECONDS = 20 * 60
@@ -65,6 +65,8 @@ GROUP_JITTER_BASE = 180  # seconds between groups
 GROUP_JITTER_RANGE = 60  # +/- seconds
 
 # ── Sheet Schema ──
+# NOTE: Lat / Lng / VerifiedCity are appended at the end so existing column
+# indices used elsewhere (Favorite, Seen, Link, Street, etc.) stay stable.
 SHEET_HEADERS = [
-    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch", "Images", "Favorite", "Seen", "Description"
+    "Timestamp", "City", "Area", "Street", "Price", "Rooms", "Size", "Phone", "Link", "Is Catch", "Images", "Favorite", "Seen", "Description", "Lat", "Lng", "VerifiedCity"
 ]

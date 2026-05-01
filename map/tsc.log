@@ -1,0 +1,4 @@
+npm error code UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+npm error errno UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+npm error request to https://registry.npmjs.org/tsc failed, reason: unable to get local issuer certificate
+npm error A complete log of this run can be found in: C:\Users\guyben\AppData\Local\npm-cache\_logs\2026-05-01T15_42_18_027Z-debug-0.log

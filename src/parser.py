@@ -3,7 +3,7 @@ import logging
 from openai import OpenAI
 
 from src.config import OPENAI_API_KEY
-from src.geocoder import resolve_area
+from src.geocoder import geocode_address
 
 logger = logging.getLogger(__name__)
 
@@ -109,12 +109,21 @@ def parse_post(text: str, group_name: str = "") -> dict | None:
         street = data.get("street", "")
         city = data.get("city", "")
 
-        # Fallback to geocoding if LLM couldn't determine the area
-        if (not area or area == "לא ידוע") and street and city:
-            geocoded_area = resolve_area(street, city)
-            if geocoded_area:
-                logger.info("  Geocoding fallback: area resolved to '%s'", geocoded_area)
-                area = geocoded_area
+        # One Google Geocoding call per new listing — fills in coordinates and
+        # the verified city for the map, and acts as the area fallback when the
+        # LLM couldn't determine the neighborhood. Persisted in the sheet so
+        # the Next.js map never has to call Google itself.
+        lat = lng = None
+        verified_city = ""
+        if street and city:
+            geo = geocode_address(street, city)
+            if geo:
+                lat = geo["lat"]
+                lng = geo["lng"]
+                verified_city = geo["verified_city"] or ""
+                if (not area or area == "לא ידוע") and geo["area"]:
+                    logger.info("  Geocoding fallback: area resolved to '%s'", geo["area"])
+                    area = geo["area"]
 
         result = {
             "city": city,
@@ -125,6 +134,9 @@ def parse_post(text: str, group_name: str = "") -> dict | None:
             "sqm": data.get("sqm", 0),
             "phone": data.get("phone", ""),
             "is_catch": bool(data.get("is_catch", False)),
+            "lat": lat if lat is not None else "",
+            "lng": lng if lng is not None else "",
+            "verified_city": verified_city,
         }
 
         logger.info(
