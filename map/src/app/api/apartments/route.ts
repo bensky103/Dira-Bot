@@ -88,6 +88,10 @@ async function loadApartments(): Promise<Apartment[]> {
       row.link
     );
 
+    const imageCount = row.images
+      ? row.images.split("|").filter(Boolean).length
+      : 0;
+
     return {
       timestamp: row.timestamp,
       city: coords.verifiedCity ?? row.city,
@@ -101,10 +105,10 @@ async function loadApartments(): Promise<Apartment[]> {
       isCatch: String(row.isCatch).toLowerCase() === "true",
       isFavorite: String(row.favorite).toLowerCase() === "true",
       isSeen: String(row.seen).toLowerCase() === "true",
-      description: row.description || "",
       lat: coords.lat,
       lng: coords.lng,
-      images: row.images ? row.images.split("|").filter(Boolean) : [],
+      hasDescription: Boolean(row.description && row.description.trim().length > 0),
+      imageCount,
     };
   });
 

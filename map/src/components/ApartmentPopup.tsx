@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import type { Apartment } from "@/types/apartment";
+import type { Apartment, ApartmentDetails } from "@/types/apartment";
 
 interface ApartmentPopupProps {
   apartment: Apartment;
@@ -178,14 +178,31 @@ export default function ApartmentPopup({ apartment, onDelete, onFavorite, onSeen
     onSeen?.(apartment.link, false);
   };
 
-  const hasDescription =
-    apartment.description && apartment.description.trim().length > 0;
+  // Lazy-load description + image URLs only when this popup mounts. Keeps
+  // the main /api/apartments payload small so the map loads fast.
+  const [details, setDetails] = useState<ApartmentDetails | null>(null);
+  useEffect(() => {
+    if (!apartment.hasDescription && apartment.imageCount === 0) return;
+    let cancelled = false;
+    fetch(`/api/apartments/details?link=${encodeURIComponent(apartment.link)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: ApartmentDetails | null) => {
+        if (!cancelled && data) setDetails(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [apartment.link, apartment.hasDescription, apartment.imageCount]);
+
+  const images = details?.images ?? [];
+  const description = details?.description ?? "";
 
   return (
     <div className="popup-card">
-      {apartment.images.length > 0 && (
+      {images.length > 0 && (
         <ImageCarousel
-          images={apartment.images}
+          images={images}
           onOpenLightbox={(i) => setLightboxIndex(i)}
         />
       )}
@@ -238,7 +255,7 @@ export default function ApartmentPopup({ apartment, onDelete, onFavorite, onSeen
           </div>
         )}
       </div>
-      {hasDescription && (
+      {apartment.hasDescription && (
         <div className="popup-description">
           <button
             className="description-toggle"
@@ -251,7 +268,7 @@ export default function ApartmentPopup({ apartment, onDelete, onFavorite, onSeen
           </button>
           {descriptionOpen && (
             <div className="description-body" dir="auto">
-              {apartment.description}
+              {description || "Loading..."}
             </div>
           )}
         </div>
@@ -284,7 +301,7 @@ export default function ApartmentPopup({ apartment, onDelete, onFavorite, onSeen
       )}
       {lightboxIndex !== null && (
         <Lightbox
-          images={apartment.images}
+          images={images}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
         />

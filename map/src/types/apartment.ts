@@ -11,8 +11,15 @@ export interface Apartment {
   isCatch: boolean;
   isFavorite: boolean;
   isSeen: boolean;
-  description: string;
   lat: number;
   lng: number;
+  // Lightweight flags for the list payload. Full description + image URLs
+  // are fetched on demand via /api/apartments/details when a popup opens.
+  hasDescription: boolean;
+  imageCount: number;
+}
+
+export interface ApartmentDetails {
+  description: string;
   images: string[];
 }
